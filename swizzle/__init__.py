@@ -42,8 +42,6 @@ def swizzle(cls=None, meta = False):
         # Handle the meta class
         if meta:
             meta_cls = type(cls)
-            print(meta_cls)
-            print(cls.__bases__)
             if meta_cls == type:
                 class SwizzleType(meta_cls): pass
                 meta_cls = SwizzleType
