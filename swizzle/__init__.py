@@ -3,7 +3,7 @@ import sys
 import types
 import inspect
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 def _swizzle(func):
     def _getattr(obj, name, default=object()):
