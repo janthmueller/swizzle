@@ -40,5 +40,4 @@ setup(
 
 # python setup.py sdist bdist_wheel
 # twine check dist/*
-# copy token/pw to $HOME/.pypirc -> cp .pypirc $HOME/.pypirc
-# twine upload dist/*
+# twine upload dist/* -> insert token
