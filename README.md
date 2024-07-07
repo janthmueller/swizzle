@@ -106,3 +106,4 @@ print(Test.xyzx)  # Output: (7, 1)
 - [ ] Add name seperator (None, '', '_', etc.) as an argument to the decorator
    - If not None, the name gets splitted and the parts are used to access the attributes (should be much faster than the current implementation)
 - [ ] Add support for nested swizzling with swizzled namedtuples
+- [ ] Maybe add support for save swizzle setter (e.g. swizzset(obj, 'xyz', (1, 2, 3))) which makes sure if 'xyz' exists; suppress creation of new attributes
