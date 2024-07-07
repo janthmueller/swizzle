@@ -16,6 +16,11 @@ print(Vector(1, 2, 3).yzx)  # Output: (2, 3, 1)
 ```
 
 ## Installation
+### From PyPI
+```bash
+pip install swizzle
+```
+### From GitHub
 ```bash
 pip install git+https://github.com/janthmueller/swizzle.git
 ```
