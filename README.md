@@ -55,7 +55,7 @@ class XYZ(IntEnum):
 # Test the swizzle
 print(XYZ.yxz)  # Output: (2, 3, 1)
 ```
-Setting the `meta` argument to `True` in the swizzle decorator modifies the `getattr` behavior of the metaclass, enabling attribute swizzling directly on the class itself.
+Setting the `meta` argument to `True` in the swizzle decorator extends the `getattr` behavior of the metaclass, enabling attribute swizzling directly on the class itself.
 
 ### Using `swizzle` with `NamedTuple`
 
