@@ -12,7 +12,7 @@ class Vector:
         self.y = y
         self.z = z
 
-print(Vector(1, 2, 3).zxy)  # Output: (3, 2, 1)
+print(Vector(1, 2, 3).yzx)  # Output: (2, 3, 1)
 ```
 
 ## Installation
