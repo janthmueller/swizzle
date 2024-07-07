@@ -3,7 +3,7 @@
 import sys
 import os
 from setuptools import setup, find_packages
-
+import swizzle
 
 if sys.version_info < (3, 6):
     sys.exit("ERROR: swizzle requires Python 3.6+")
