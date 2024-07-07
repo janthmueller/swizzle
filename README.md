@@ -102,3 +102,7 @@ print(Test.xyyz)  # Output: (4, 5)
 print(Test.xyzx)  # Output: (7, 1)
 ```
 
+## To Do:
+- [ ] Add name seperator (None, '', '_', etc.) as an argument to the decorator
+   - If not None, the name gets splitted and the parts are used to access the attributes (should be much faster than the current implementation)
+- [ ] Add support for nested swizzling with swizzled namedtuples
