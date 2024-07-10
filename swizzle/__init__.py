@@ -2,7 +2,7 @@ from functools import wraps
 import sys
 import types
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 def _split(s, sep):
     if sep == '':
@@ -20,6 +20,10 @@ def _swizzle(func, sep = None):
     @wraps(func)
     def _swizzle_attributes(obj, name):
         """Find attributes of an object that match substrings of a given name."""
+        try:
+            return func(obj, name)
+        except AttributeError:
+            pass
         if sep is not None:
             names = _split(name, sep)
             found_attributes = [func(obj, n) for n in names]
@@ -39,7 +43,7 @@ def _swizzle(func, sep = None):
                         break
                 if not match_found:
                     raise AttributeError(f"No matching attribute found for substring: {name[i:]}")
-        return tuple(found_attributes)
+        return tuple(found_attributes) 
     return _swizzle_attributes
     
 def swizzle(cls=None, meta = False, sep = None):
@@ -64,9 +68,6 @@ def swizzle(cls=None, meta = False, sep = None):
     else:
         return decorator(cls)
         
-
-
-# make swizzle a callable module
 class Swizzle(types.ModuleType):
     def __init__(self):
         types.ModuleType.__init__(self, __name__)
