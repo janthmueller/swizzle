@@ -17,7 +17,7 @@ setup(
     packages=find_packages(exclude=["tests"]),
     author="Jan T. Müller",
     author_email="mail@jantmueller.com",
-    description="Transforms a string representation of a Python literal into the corresponding Python object.",
+    description="The Swizzle Decorator enables the retrieval of multiple attributes, similar to swizzling in computer graphics.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/janthmueller/swizzle",
