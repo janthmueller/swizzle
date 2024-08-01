@@ -102,3 +102,6 @@ print(Test.xyyz)  # Output: (4, 5)
 print(Test.xyzx)  # Output: (7, 1)
 ```
 
+## To Do
+- [ ] Add support for module-level swizzling
+- [ ] Swizzle for method args (swizzle+partial)
