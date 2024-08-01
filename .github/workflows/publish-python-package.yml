@@ -1,4 +1,4 @@
-name: Publish Python Package
+name: Publish Tag-Versioned Python Package
 
 on:
   push:
