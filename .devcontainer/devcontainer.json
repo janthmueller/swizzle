@@ -11,7 +11,8 @@
 				"ms-python.vscode-pylance",
 				"ms-toolsai.jupyter",
 				"GitHub.copilot",
-				"visualstudioexptteam.vscodeintellicode"
+				"visualstudioexptteam.vscodeintellicode",
+				"github.vscode-github-actions"
 			]
 		}
 	}
