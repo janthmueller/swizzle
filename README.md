@@ -58,7 +58,7 @@ class XYZ(IntEnum):
     Z = 3
 
 # Test the swizzle
-print(XYZ.yxz)  # Output: (<XYZ.Y: 2>, <XYZ.X: 1>, <XYZ.Z: 3>)
+print(XYZ.YXZ)  # Output: (<XYZ.Y: 2>, <XYZ.X: 1>, <XYZ.Z: 3>)
 ```
 Setting the `meta` argument to `True` in the swizzle decorator extends the `getattr` behavior of the metaclass, enabling attribute swizzling directly on the class itself.
 
