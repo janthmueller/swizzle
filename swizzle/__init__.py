@@ -2,7 +2,7 @@ from functools import wraps
 import sys
 import types
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 
 def _split(s, sep):
     if sep == '':
