@@ -80,8 +80,8 @@ print(xyz.yzx)  # Output: (2, 3, 1)
 ```
 
 
-### Sequential matching 
-Attributes are matched from left to right, starting with the longest substring match. 
+### Sequential matching
+Attributes are matched from left to right, starting with the longest substring match.
 ```python
 import swizzle
 
@@ -103,5 +103,4 @@ print(Test.xyzx)  # Output: (7, 1)
 ```
 
 ## To Do
-- [ ] Add support for module-level swizzling
 - [ ] Swizzle for method args (swizzle+partial)
