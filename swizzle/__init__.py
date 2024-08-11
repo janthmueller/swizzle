@@ -2,7 +2,7 @@ from functools import wraps
 import sys
 import types
 
-__version__ = "0.1.4"
+__version__ = "1.0.0"
 MISSING = object()
 
 
