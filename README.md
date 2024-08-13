@@ -1,4 +1,8 @@
 # Swizzle Decorator
+[![PyPI version](https://badge.fury.io/py/swizzle.svg)](https://badge.fury.io/py/swizzle)
+[![Downloads](https://pepy.tech/badge/swizzle)](https://pepy.tech/project/swizzle)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/janthmueller/swizzle/blob/main/LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/janthmueller/swizzle.svg)](https://github.com/janthmueller/swizzle/stargazers)
 
 The **Swizzle Decorator** for Python enhances attribute lookup methods (`__getattr__` or `__getattribute__`) to facilitate dynamic and flexible retrieval of multiple attributes based on specified arrangements of their names. This concept is reminiscent of swizzling in computer graphics, where it allows efficient access to components of vectors or coordinates in various orders:
 
