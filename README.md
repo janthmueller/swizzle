@@ -1,10 +1,24 @@
-# Swizzle Decorator
+# Swizzle
 [![PyPI version](https://badge.fury.io/py/swizzle.svg)](https://badge.fury.io/py/swizzle)
 [![Downloads](https://pepy.tech/badge/swizzle)](https://pepy.tech/project/swizzle)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/janthmueller/swizzle/blob/main/LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/janthmueller/swizzle.svg)](https://github.com/janthmueller/swizzle/stargazers)
 
-The **Swizzle Decorator** for Python enhances attribute lookup methods (`__getattr__` or `__getattribute__`) to facilitate dynamic and flexible retrieval of multiple attributes based on specified arrangements of their names. This concept is reminiscent of swizzling in computer graphics, where it allows efficient access to components of vectors or coordinates in various orders:
+**Swizzle** for Python enhances attribute lookup methods to facilitate dynamic and flexible retrieval of multiple attributes based on specified arrangements of their names.
+> **Update v2:**
+> Introducing `swizzlednamedtuple` , a new function that allows you to create **swizzled named tuples**. This feature is inspired by the `namedtuple` function from the [collections module](https://docs.python.org/3/library/collections.html#collections.namedtuple) and provides a concise way to define swizzled tuples.
+> ```python
+> from swizzle import swizzlednamedtuple
+> Vector = swizzlednamedtuple('Vector', 'x y z', arrange_names = "y z x x")
+>
+> # Test the swizzle
+> v = Vector(1, 2, 3)
+> print(v)  # Output: Vector(y=2, z=3, x=1, x=1)
+> print(v.yzx)  # Output: Vector(y = 2, z = 3, x = 1)
+> print(v.yzx.xxzyzz)  # Output: Vector(x=1, x=1, z=3, y=2, z=3, z=3)
+>```
+
+### Swizzle Decorator:
 
 ```python
 import swizzle
@@ -16,8 +30,10 @@ class Vector:
         self.y = y
         self.z = z
 
-print(Vector(1, 2, 3).yzx)  # Output: (2, 3, 1)
+# Test the swizzle
+print(Vector(1, 2, 3).yzx)  # Output: Vector(y = 2, z = 3, x = 1)
 ```
+
 
 ## Installation
 ### From PyPI
@@ -39,14 +55,13 @@ from dataclasses import dataclass
 
 @swizzle
 @dataclass
-class XYZ:
+class Vector:
     x: int
     y: int
     z: int
 
 # Test the swizzle
-xyz = XYZ(1, 2, 3)
-print(xyz.yzx)  # Output: (2, 3, 1)
+print(Vector(1, 2, 3).yzx)  # Output: Vector(y = 2, z = 3, x = 1)
 ```
 
 ### Using `swizzle` with `IntEnum`
@@ -56,41 +71,24 @@ import swizzle
 from enum import IntEnum
 
 @swizzle(meta=True)
-class XYZ(IntEnum):
+class Vector(IntEnum):
     X = 1
     Y = 2
     Z = 3
 
 # Test the swizzle
-print(XYZ.YXZ)  # Output: (<XYZ.Y: 2>, <XYZ.X: 1>, <XYZ.Z: 3>)
+print(Vector.YXZ)  # Output: Vector(Y=<Vector.Y: 2>, X=<Vector.X: 1>, Z=<Vector.Z: 3>)
 ```
 Setting the `meta` argument to `True` in the swizzle decorator extends the `getattr` behavior of the metaclass, enabling attribute swizzling directly on the class itself.
 
-### Using `swizzle` with `NamedTuple`
-
-```python
-import swizzle
-from typing import NamedTuple
-
-@swizzle
-class XYZ(NamedTuple):
-    x: int
-    y: int
-    z: int
-
-# Test the swizzle
-xyz = XYZ(1, 2, 3)
-print(xyz.yzx)  # Output: (2, 3, 1)
-```
-
 
 ### Sequential matching
-Attributes are matched from left to right, starting with the longest substring match.
+Attributes are matched from left to right, starting with the longest substring match. This behavior can be controlled by the `seperator` argument in the swizzle decorator.
 ```python
 import swizzle
 
 @swizzle(meta=True)
-class Test:
+class Vector:
     x = 1
     y = 2
     z = 3
@@ -100,11 +98,10 @@ class Test:
     xyz = 7
 
 # Test the swizzle
-print(Test.xz)  # Output: 6
-print(Test.yz)  # Output: 5
-print(Test.xyyz)  # Output: (4, 5)
-print(Test.xyzx)  # Output: (7, 1)
+print(Vector.xz)  # Output: 6
+print(Vector.yz)  # Output: 5
+print(Vector.xyyz)  # Output: Vector(xy=4, yz=5)
+print(Vector.xyzx)  # Output: Vector(xyz=7, x=1)
 ```
 
-## To Do
-- [ ] Swizzle for method args (swizzle+partial)
+

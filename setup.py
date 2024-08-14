@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Jan T. Müller <mail@jantmueller.com>
+# Copyright (c) 2024 Jan T. Müller <mail@jantmueller.com>
 
 import sys
 import os
@@ -17,7 +17,7 @@ setup(
     packages=find_packages(exclude=["tests"]),
     author="Jan T. Müller",
     author_email="mail@jantmueller.com",
-    description="The Swizzle Decorator enables the retrieval of multiple attributes, similar to swizzling in computer graphics.",
+    description="Swizzle enables the retrieval of multiple attributes, similar to swizzling in computer graphics.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/janthmueller/swizzle",
