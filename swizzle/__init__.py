@@ -17,7 +17,55 @@ __version__ = "2.0.0"
 MISSING = object()
 
 def swizzlednamedtuple(typename, field_names, *, rename=False, defaults=None, module=None, arrange_names = None, seperator = None):
-    # Validate the field names. Skip duplicate and underscore checks.
+    """
+    Create a custom named tuple class with swizzled attributes, allowing for rearranged field names
+    and customized attribute access.
+
+    This function generates a new subclass of `tuple` with named fields, similar to Python's
+    `collections.namedtuple`. However, it extends the functionality by allowing field names to be
+    rearranged, and attributes to be accessed with a customizable separator. The function also
+    provides additional safeguards for field naming and attribute access.
+
+    Args:
+        typename (str): The name of the new named tuple type.
+        field_names (sequence of str or str): A sequence of field names for the tuple. If given as
+            a single string, it will be split into separate field names.
+        rename (bool, optional): If True, invalid field names are automatically replaced with
+            positional names. Defaults to False.
+        defaults (sequence, optional): Default values for the fields. Defaults to None.
+        module (str, optional): The module name in which the named tuple is defined. Defaults to
+            the caller's module.
+        arrange_names (sequence of str, optional): A sequence of field names indicating the order
+            in which fields should be arranged in the resulting named tuple. This allows for fields
+            to be rearranged and, unlike standard `namedtuple`, can include duplicates. Defaults
+            to the order given in `field_names`.
+        separator (str, optional): A separator string that customizes the structure of attribute
+            access. If provided, this separator allows attributes to be accessed by combining field
+            names with the separator in between them. Defaults to no separator.
+
+    Returns:
+        type: A new subclass of `tuple` with named fields and customized attribute access.
+
+    Notes:
+        - The function is based on `collections.namedtuple` but with additional features such as
+          field rearrangement and swizzled attribute access.
+        - The `arrange_names` argument allows rearranging the field names, and it can include
+          duplicates, which is not possible in a standard `namedtuple`.
+        - The generated named tuple class includes methods like `_make`, `_replace`, `__repr__`,
+          `_asdict`, and `__getnewargs__`, partially customized to handle the rearranged field order.
+        - The `separator` argument enables a custom structure for attribute access, allowing for
+          combined attribute names based on the provided separator. If no separator is provided,
+          standard attribute access is used.
+
+    Example:
+        >>> Vector = swizzlednamedtuple('Vector', 'x y z', arrange_names='y z x x')
+        >>> # Test the swizzle
+        >>> v = Vector(1, 2, 3)
+        >>> print(v)  # Output: Vector(y=2, z=3, x=1, x=1)
+        >>> print(v.yzx)  # Output: Vector(y=2, z=3, x=1)
+        >>> print(v.yzx.xxzyzz)  # Output: Vector(x=1, x=1, z=3, y=2, z=3, z=3)
+    """
+
     if isinstance(field_names, str):
         field_names = field_names.replace(',', ' ').split()
     field_names = list(map(str, field_names))
