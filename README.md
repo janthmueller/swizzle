@@ -6,11 +6,11 @@
 
 **Swizzle** for Python enhances attribute lookup methods to facilitate dynamic and flexible retrieval of multiple attributes based on specified arrangements of their names.
 > **Update v2:**
-> Introducing `swizzlednamedtuple` , a new function that allows you to create **swizzled named tuples**. This feature is inspired by the `namedtuple` function from the [collections module](https://docs.python.org/3/library/collections.html#collections.namedtuple) and provides a concise way to define swizzled tuples.
+> Introducing `swizzledtuple` , a new function that allows you to create swizzled named tuples. This feature is inspired by the `namedtuple` function from the [collections module](https://docs.python.org/3/library/collections.html#collections.namedtuple) and provides a concise way to define swizzled tuples.
 > ```python
-> from swizzle import swizzlednamedtuple
+> from swizzle import swizzledtuple
 >
-> Vector = swizzlednamedtuple('Vector', 'x y z', arrange_names = "y z x x")
+> Vector = swizzledtuple('Vector', 'x y z', arrange_names = "y z x x")
 >
 > # Test the swizzle
 > v = Vector(1, 2, 3)
