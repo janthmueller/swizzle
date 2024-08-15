@@ -1,14 +1,15 @@
 # Swizzle
-[![PyPI version](https://badge.fury.io/py/swizzle.svg)](https://badge.fury.io/py/swizzle)
-[![Downloads](https://pepy.tech/badge/swizzle)](https://pepy.tech/project/swizzle)
+[![PyPI version](https://badge.fury.io/py/swizzle.svg?kill_cache=1)](https://badge.fury.io/py/swizzle)
+[![Downloads](https://pepy.tech/badge/swizzle?kill_cache=1)](https://pepy.tech/project/swizzle)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/janthmueller/swizzle/blob/main/LICENSE)
-[![GitHub Stars](https://img.shields.io/github/stars/janthmueller/swizzle.svg)](https://github.com/janthmueller/swizzle/stargazers)
+[![GitHub Stars](https://img.shields.io/github/stars/janthmueller/swizzle.svg?kill_cache=1)](https://github.com/janthmueller/swizzle/stargazers)
 
 **Swizzle** for Python enhances attribute lookup methods to facilitate dynamic and flexible retrieval of multiple attributes based on specified arrangements of their names.
 > **Update v2:**
 > Introducing `swizzlednamedtuple` , a new function that allows you to create **swizzled named tuples**. This feature is inspired by the `namedtuple` function from the [collections module](https://docs.python.org/3/library/collections.html#collections.namedtuple) and provides a concise way to define swizzled tuples.
 > ```python
 > from swizzle import swizzlednamedtuple
+>
 > Vector = swizzlednamedtuple('Vector', 'x y z', arrange_names = "y z x x")
 >
 > # Test the swizzle
