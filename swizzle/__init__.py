@@ -14,7 +14,7 @@ except ImportError:
     _tuplegetter = lambda index, doc: property(_itemgetter(index), doc=doc)
 
 
-__version__ = "2.1.0"
+__version__ = "2.1.1"
 
 MISSING = object()
 
@@ -362,7 +362,6 @@ def swizzle(cls=None, meta=False, separator=None, type = tuple, **kwargs):
 
         # Handle meta-class swizzling if requested
         if meta:
-            print(cls)
             meta_cls = _type(cls)
             if meta_cls == _type:
                 class SwizzledMetaType(meta_cls):
