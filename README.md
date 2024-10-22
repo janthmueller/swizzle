@@ -1,5 +1,5 @@
 # Swizzle
-[![PyPI Latest Release](https://img.shields.io/pypi/v/swizzle.svg)](https://pypi.org/project/swizzle/) 
+[![PyPI Latest Release](https://img.shields.io/pypi/v/swizzle.svg)](https://pypi.org/project/swizzle/)
 [![Pepy Total Downlods](https://img.shields.io/pepy/dt/swizzle)](https://pepy.tech/project/swizzle)
 [![GitHub License](https://img.shields.io/github/license/janthmueller/swizzle)](https://github.com/janthmueller/swizzle/blob/main/LICENSE)
 [![GitHub Stars](https://img.shields.io/github/stars/janthmueller/swizzle.svg)](https://github.com/janthmueller/swizzle/stargazers)
@@ -84,7 +84,7 @@ Setting the `meta` argument to `True` in the swizzle decorator extends the `geta
 
 
 ### Sequential matching
-Attributes are matched from left to right, starting with the longest substring match. This behavior can be controlled by the `seperator` argument in the swizzle decorator.
+Attributes are matched from left to right, starting with the longest substring match. This behavior can be controlled by the `sep` argument in the swizzle decorator.
 ```python
 import swizzle
 

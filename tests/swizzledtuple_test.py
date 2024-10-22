@@ -66,7 +66,7 @@ class Testswizzledtuple(unittest.TestCase):
         self.assertEqual(p, (1, 2, 3))
 
     def test_integration(self):
-        MyTuple = swizzledtuple('MyTuple', 'x y z', arrange_names='z x y z', rename=True, defaults=(0,0,2), seperator='')
+        MyTuple = swizzledtuple('MyTuple', 'x y z', arrange_names='z x y z', rename=True, defaults=(0,0,2), sep='')
         t = MyTuple(1)
         self.assertEqual(t, (2, 1, 0, 2))
         self.assertEqual(repr(t), 'MyTuple(z=2, x=1, y=0, z=2)')

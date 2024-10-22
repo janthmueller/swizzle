@@ -18,10 +18,10 @@ class Vector:
         self.z = z
 
 class TestVectorSwizzling(unittest.TestCase):
-    
+
     def setUp(self):
         self.vector = Vector(1, 2, 3)
-    
+
     def test_swizzle_yzx(self):
         self.assertEqual(self.vector.yzx, (2, 3, 1))
 
@@ -39,13 +39,13 @@ class XYZ:
     z: int
 
 class TestXYZDataclassSwizzling(unittest.TestCase):
-    
+
     def setUp(self):
         self.xyz = XYZ(1, 2, 3)
-    
+
     def test_swizzle_yzx(self):
         self.assertEqual(self.xyz.yzx, (2, 3, 1))
-    
+
     def test_invalid_swizzle(self):
         with self.assertRaises(AttributeError):
             _ = self.xyz.nonexistent_attribute
@@ -59,7 +59,7 @@ class XYZEnumMeta(IntEnum):
     Z = 3
 
 class TestXYZEnumMetaSwizzling(unittest.TestCase):
-    
+
     def test_swizzle_meta(self):
         self.assertEqual(XYZEnumMeta.YXZ, (XYZEnumMeta.Y, XYZEnumMeta.X, XYZEnumMeta.Z))
 
@@ -72,13 +72,13 @@ class XYZNamedTuple(NamedTuple):
     z: int
 
 class TestXYZNamedTupleSwizzling(unittest.TestCase):
-    
+
     def setUp(self):
         self.xyz = XYZNamedTuple(1, 2, 3)
-    
+
     def test_swizzle_yzx(self):
         self.assertEqual(self.xyz.yzx, (2, 3, 1))
-    
+
     def test_invalid_swizzle(self):
         with self.assertRaises(AttributeError):
             _ = self.xyz.nonexistent_attribute
@@ -96,11 +96,11 @@ class Test:
     xyz = 7
 
 class TestSequentialAttributeMatching(unittest.TestCase):
-    
+
     def test_attribute_values(self):
         self.assertEqual(Test.xz, 6)
         self.assertEqual(Test.yz, 5)
-    
+
     def test_composite_swizzle(self):
         self.assertEqual(Test.xyyz, (4, 5))
         self.assertEqual(Test.xyzx, (7, 1))
@@ -108,21 +108,38 @@ class TestSequentialAttributeMatching(unittest.TestCase):
 ### 6. **Invalid Swizzle Requests Tests**
 
 class TestInvalidSwizzleRequests(unittest.TestCase):
-    
+
     def test_vector_invalid_swizzle(self):
         vector = Vector(1, 2, 3)
         with self.assertRaises(AttributeError):
             _ = vector.nonexistent_attribute
-    
+
     def test_xyz_invalid_swizzle(self):
         xyz = XYZ(1, 2, 3)
         with self.assertRaises(AttributeError):
             _ = xyz.nonexistent_attribute
-    
+
     def test_xyz_namedtuple_invalid_swizzle(self):
         xyz = XYZNamedTuple(1, 2, 3)
         with self.assertRaises(AttributeError):
             _ = xyz.nonexistent_attribute
+
+class TestSeparatorSwizzling(unittest.TestCase):
+
+    def setUp(self):
+        @swizzle(sep='')
+        class Test:
+            def __init__(self):
+                self.a = 0
+        self.test_list = Test()
+
+    def test_swizzle_list(self):
+        self.assertEqual(self.test_list.a, 0)
+        self.assertEqual(self.test_list.aa, (0, 0))
+
+    def test_swizzle_list_raise(self):
+        with self.assertRaises(AttributeError):
+            _ = self.test_list.aabb
 
 if __name__ == "__main__":
     unittest.main()
