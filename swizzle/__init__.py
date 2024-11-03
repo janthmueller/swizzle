@@ -14,7 +14,7 @@ except ImportError:
 
 _type = builtins.type
 
-__version__ = "2.2.0"
+__version__ = "2.2.1"
 
 MISSING = object()
 
