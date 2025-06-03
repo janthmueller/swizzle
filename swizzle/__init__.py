@@ -14,7 +14,7 @@ except ImportError:
 
 _type = builtins.type
 
-__version__ = "2.2.1"
+__version__ = "2.3.0"
 
 MISSING = object()
 
@@ -43,7 +43,7 @@ def swizzledtuple(typename, field_names, *, rename=False, defaults=None, module=
             to the order given in `field_names`.
         sep (str, optional): A separator string that customizes the structure of attribute
             access. If provided, this sep allows attributes to be accessed by combining field
-            names with the sep in between them. Defaults to no sep.
+            names with the sep in between them. Defaults to None.
 
     Returns:
         type: A new subclass of `tuple` with named fields and customized attribute access.
@@ -196,6 +196,40 @@ def swizzledtuple(typename, field_names, *, rename=False, defaults=None, module=
     def __getattribute__(self, attr_name):
         return super(_tuple, self).__getattribute__(attr_name)
 
+    # def __getitem__(self, index):
+    #     a_names = arrange_names[index]
+    #     _sep = '' if sep is None else sep
+    #     return getattr(self, _sep.join(a_names))
+
+    def __getitem__(self, index):
+        if not isinstance(index, slice):
+            return _tuple.__getitem__(self, index)
+
+        selected_indices = arrange_indices[index]
+        selected_values = _tuple.__getitem__(self, index)
+
+        seen = set()
+        filtered = [
+            (i, v, field_names[i])
+            for i, v in zip(selected_indices, selected_values)
+            if not (i in seen or seen.add(i))
+        ]
+
+        if filtered:
+            _, filtered_values, filtered_names = zip(*filtered)
+        else:
+            filtered_values, filtered_names = (), ()
+
+        return swizzledtuple(
+            typename,
+            filtered_names,
+            rename=rename,
+            defaults=filtered_values,
+            module=module,
+            arrange_names=arrange_names[index],
+            sep=sep
+        )()
+
 
 
     for method in (
@@ -206,6 +240,7 @@ def swizzledtuple(typename, field_names, *, rename=False, defaults=None, module=
         _asdict,
         __getnewargs__,
         __getattribute__,
+        __getitem__
     ):
         method.__qualname__ = f'{typename}.{method.__name__}'
 
@@ -220,7 +255,8 @@ def swizzledtuple(typename, field_names, *, rename=False, defaults=None, module=
         '__repr__': __repr__,
         '_asdict': _asdict,
         '__getnewargs__': __getnewargs__,
-        '__getattribute__': __getattribute__
+        '__getattribute__': __getattribute__,
+        '__getitem__': __getitem__
     }
     seen = set()
     for index, name in enumerate(arrange_names):

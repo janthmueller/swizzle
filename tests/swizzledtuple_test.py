@@ -75,6 +75,45 @@ class Testswizzledtuple(unittest.TestCase):
         self.assertEqual(t_new, (2, 1, 5, 2))
         self.assertEqual(t_new._asdict(), {'z': 2, 'x': 1, 'y': 5})
 
+class TestSwizzledTupleGetItem(unittest.TestCase):
+    def setUp(self):
+        self.Vector = swizzledtuple('Vector', 'x y z', arrange_names='y z x x')
+        self.v = self.Vector(1, 2, 3)  # y=2, z=3, x=1, x=1
+
+    def test_getitem_index(self):
+        self.assertEqual(self.v[0], 2)  # y
+        self.assertEqual(self.v[1], 3)  # z
+        self.assertEqual(self.v[2], 1)  # x
+        self.assertEqual(self.v[3], 1)  # x again (duplicate field)
+
+    def test_getitem_slice(self):
+        sliced = self.v[1:3]
+        self.assertIsInstance(sliced, tuple)  # Should be a swizzledtuple subclass of tuple
+        self.assertEqual(len(sliced), 2)
+        self.assertEqual(sliced, (3,1))
+
+        self.assertEqual(sliced[0], 3)  # z
+        self.assertEqual(sliced[1], 1)  # x
+
+    def test_getitem_full_slice(self):
+        full_slice = self.v[:]
+        self.assertIsInstance(full_slice, tuple)
+        self.assertEqual(full_slice, self.v)
+
+    def test_getitem_empty_slice(self):
+        empty_slice = self.v[2:2]
+        self.assertIsInstance(empty_slice, tuple)
+        self.assertEqual(len(empty_slice), 0)
+
+    def test_getitem_invalid_index(self):
+        with self.assertRaises(IndexError):
+            _ = self.v[10]  # Out of range
+
+    def test_getitem_invalid_slice(self):
+        negative_slice = self.v[::-1]
+        self.assertIsInstance(negative_slice, tuple)
+        self.assertEqual(negative_slice, (1, 1, 3, 2))  # reversed values
+
 if __name__ == '__main__':
     unittest.main()
 
