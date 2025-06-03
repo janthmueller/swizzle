@@ -1,4 +1,3 @@
-# .github/workflows/python-tests.yml
 name: Unit Tests
 
 on:
@@ -8,16 +7,16 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest  # The environment to run the job in
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3  # Checkout the repository code
+      uses: actions/checkout@v3
 
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.x'  # Specify the Python version to use
+        python-version: '3.x'
 
     - name: Install dependencies
       run: |
@@ -31,12 +30,12 @@ jobs:
 
     - name: Run tests
       run: |
-        mkdir -p test-results  # Create directory for test results
+        mkdir -p test-results
         python -m unittest discover -s tests -p "*test.py" | tee test-results/test_output.log
-        # Here, we're redirecting output to a log file in the test-results directory
 
     - name: Upload test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v3.1.3
       with:
         name: unittest-results
         path: test-results/test_output.log
+
