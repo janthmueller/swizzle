@@ -5,3 +5,5 @@ dist
 *.egg-info/
 *.ipynb
 *temp*
+.envrc
+.direnv/
