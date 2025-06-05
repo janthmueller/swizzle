@@ -3,6 +3,7 @@
 import builtins
 import sys as _sys
 import types
+from enum import EnumType
 from functools import wraps
 from keyword import iskeyword as _iskeyword
 from operator import itemgetter as _itemgetter
@@ -437,6 +438,18 @@ def swizzle_attributes_retriever(
 def swizzle(cls=None, meta=False, sep=None, type=tuple):
 def swizzle(cls=None, meta=False, sep=None, type=tuple, only_attrs=None):
 
+    def preserve_metadata(
+        target,
+        source,
+        keys=("__name__", "__qualname__", "__doc__", "__module__", "__annotations__"),
+    ):
+        for key in keys:
+            if hasattr(source, key):
+                try:
+                    setattr(target, key, getattr(source, key))
+                except (TypeError, AttributeError):
+                    pass  # some attributes may be read-only
+
     def class_decorator(cls):
         # Collect attribute retrieval functions from the class
         attribute_funcs = collect_attribute_functions(cls)
@@ -452,14 +465,30 @@ def swizzle(cls=None, meta=False, sep=None, type=tuple, only_attrs=None):
         # Handle meta-class swizzling if requested
         if meta:
             meta_cls = _type(cls)
-            if meta_cls == _type:
 
-                class SwizzledMetaType(meta_cls):
+            class SwizzledMetaType(meta_cls):
+                pass
+
+            if meta_cls == EnumType:
+
+                def cfem_dummy(*args, **kwargs):
                     pass
 
-                meta_cls = SwizzledMetaType
-                cls = meta_cls(cls.__name__, cls.__bases__, dict(cls.__dict__))
+                cfem = SwizzledMetaType._check_for_existing_members_
+                SwizzledMetaType._check_for_existing_members_ = cfem_dummy
 
+            class SwizzledClass(cls, metaclass=SwizzledMetaType):
+                pass
+
+            if meta_cls == EnumType:
+                SwizzledMetaType._check_for_existing_members_ = cfem
+
+            # Preserve metadata on swizzled meta and class
+            preserve_metadata(SwizzledMetaType, meta_cls)
+            preserve_metadata(SwizzledClass, cls)
+
+            meta_cls = SwizzledMetaType
+            cls = SwizzledClass
             meta_funcs = collect_attribute_functions(meta_cls)
             setattr(
                 meta_cls,
