@@ -9,6 +9,7 @@ from keyword import iskeyword as _iskeyword
 from operator import itemgetter as _itemgetter
 
 from .trie import Trie
+
 try:
     from _collections import _tuplegetter
 except ImportError:
@@ -53,9 +54,13 @@ def swizzledtuple(
             in which fields should be arranged in the resulting named tuple. This allows for fields
             to be rearranged and, unlike standard `namedtuple`, can include duplicates. Defaults
             to the order given in `field_names`.
-        sep (str, optional): A separator string that customizes the structure of attribute
-            access. If provided, this sep allows attributes to be accessed by combining field
-            names with the sep in between them. Defaults to None.
+        sep (str, optional): A separator string used to control how attribute names are constructed.
+            If provided, fields will be joined using this separator to create compound attribute names.
+            Defaults to None.
+
+            Special case: If all field names have the same length `n` after optional renaming,
+            and `sep` is still None, then `sep` is automatically set to `"+n"` (e.g. "+2").
+            This indicates that names should be split every `n` characters for improved performance.
 
     Returns:
         type: A new subclass of `tuple` with named fields and customized attribute access.
@@ -134,7 +139,7 @@ def swizzledtuple(
             )
     seen = set()
     for name in field_names:
-        if name in _dir and not rename:
+        if name in _dir:
             raise ValueError(
                 "Field names cannot be an attribute name which would shadow the namedtuple methods or attributes"
                 f"{name!r}"
@@ -174,7 +179,7 @@ def swizzledtuple(
     namespace = {
         "_tuple_new": tuple_new,
         "__builtins__": {},
-        "__name__": f"namedtuple_{typename}",
+        "__name__": f"swizzledtuple_{typename}",
     }
     code = f"lambda _cls, {arg_list}: _tuple_new(_cls, ({arg_list}))"
     __new__ = eval(code, namespace)
@@ -225,15 +230,9 @@ def swizzledtuple(
         "Return self as a plain tuple.  Used by copy and pickle."
         return _tuple(self)
 
-    @swizzle_attributes_retriever(sep=sep, type=swizzledtuple)
     @swizzle_attributes_retriever(sep=sep, type=swizzledtuple, only_attrs=field_names)
     def __getattribute__(self, attr_name):
         return super(_tuple, self).__getattribute__(attr_name)
-
-    # def __getitem__(self, index):
-    #     a_names = arrange_names[index]
-    #     _sep = '' if sep is None else sep
-    #     return getattr(self, _sep.join(a_names))
 
     def __getitem__(self, index):
         if not isinstance(index, slice):
@@ -316,8 +315,9 @@ def swizzledtuple(
 
 # Helper function to split a string based on a sep
 def split_string(string, sep):
-    if sep == "":
-        return list(string)
+    if sep[0] == "+":
+        n = int(sep)
+        return [string[i : i + n] for i in range(0, len(string), n)]
     else:
         return string.split(sep)
 
@@ -339,13 +339,20 @@ def collect_attribute_functions(cls):
 # Function to combine multiple attribute retrieval functions
 
 
-def swizzle_attributes_retriever(attribute_funcs=None, sep=None, type=swizzledtuple):
 def swizzle_attributes_retriever(
     attribute_funcs=None, sep=None, type=swizzledtuple, only_attrs=None
 ):
     trie = None
     if not sep and only_attrs:
         trie = Trie(list(only_attrs))
+
+    if sep == "":
+        sep = "+1"
+
+    if sep is None and only_attrs:
+        only_attrs_length = set(len(fname) for fname in only_attrs)
+        if len(only_attrs_length) == 1:
+            sep = f"+{next(iter(only_attrs_length))}"
 
     def _swizzle_attributes_retriever(attribute_funcs):
         if not isinstance(attribute_funcs, list):
@@ -420,7 +427,12 @@ def swizzle_attributes_retriever(
                 elif hasattr(obj, "__class__"):
                     if hasattr(obj.__class__, "__name__"):
                         name = obj.__class__.__name__
-                result = type(name, field_names, arrange_names=arranged_names)
+                result = type(
+                    name,
+                    field_names,
+                    arrange_names=arranged_names,
+                    sep=sep,
+                )
                 result = result(*field_values)
                 return result
 
@@ -434,8 +446,6 @@ def swizzle_attributes_retriever(
         return _swizzle_attributes_retriever
 
 
-# Decorator function to enable swizzling for a class
-def swizzle(cls=None, meta=False, sep=None, type=tuple):
 def swizzle(cls=None, meta=False, sep=None, type=tuple, only_attrs=None):
 
     def preserve_metadata(
@@ -458,7 +468,6 @@ def swizzle(cls=None, meta=False, sep=None, type=tuple, only_attrs=None):
         setattr(
             cls,
             attribute_funcs[-1].__name__,
-            swizzle_attributes_retriever(attribute_funcs, sep, type),
             swizzle_attributes_retriever(attribute_funcs, sep, type, only_attrs),
         )
 
@@ -489,14 +498,13 @@ def swizzle(cls=None, meta=False, sep=None, type=tuple, only_attrs=None):
 
             meta_cls = SwizzledMetaType
             cls = SwizzledClass
+
             meta_funcs = collect_attribute_functions(meta_cls)
             setattr(
                 meta_cls,
                 meta_funcs[-1].__name__,
-                swizzle_attributes_retriever(meta_funcs, sep, type),
                 swizzle_attributes_retriever(meta_funcs, sep, type, only_attrs),
             )
-
         return cls
 
     if cls is None:
