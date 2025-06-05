@@ -3,6 +3,7 @@
 import builtins
 import sys as _sys
 import types
+import unicodedata
 from enum import EnumType
 from functools import wraps
 from keyword import iskeyword as _iskeyword
@@ -17,7 +18,7 @@ except ImportError:
 
 _type = builtins.type
 
-__version__ = "2.3.0"
+__version__ = "2.3.1"
 
 MISSING = object()
 
@@ -339,20 +340,41 @@ def collect_attribute_functions(cls):
 # Function to combine multiple attribute retrieval functions
 
 
+def is_valid_sep(s):
+    # if not s:
+    #     return False
+    if s[0] == "+" and s[1:].isdigit():
+        return True
+    for ch in s:
+        if ch == "_":
+            continue
+        cat = unicodedata.category(ch)
+        if not (cat.startswith("L") or cat == "Nd"):
+            return False
+    return True
+
+
 def swizzle_attributes_retriever(
     attribute_funcs=None, sep=None, type=swizzledtuple, only_attrs=None
 ):
     trie = None
-    if not sep and only_attrs:
-        trie = Trie(list(only_attrs))
 
     if sep == "":
-        sep = "+1"
+        sep = "+1"  # for backwards compatibility, remove on next version
 
     if sep is None and only_attrs:
         only_attrs_length = set(len(fname) for fname in only_attrs)
         if len(only_attrs_length) == 1:
             sep = f"+{next(iter(only_attrs_length))}"
+        else:
+            trie = Trie(only_attrs)
+
+    if sep is not None and not is_valid_sep(sep):
+        raise ValueError(
+            f"Invalid value for sep: {sep!r}. Must be either:"
+            " (1) a non-empty string containing only letters, digits, or underscores, "
+            "or (2) a pattern of the form '+N' where N is a positive integer."
+        )
 
     def _swizzle_attributes_retriever(attribute_funcs):
         if not isinstance(attribute_funcs, list):
