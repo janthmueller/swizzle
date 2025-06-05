@@ -7,6 +7,7 @@ from functools import wraps
 from keyword import iskeyword as _iskeyword
 from operator import itemgetter as _itemgetter
 
+from .trie import Trie
 try:
     from _collections import _tuplegetter
 except ImportError:
@@ -224,6 +225,7 @@ def swizzledtuple(
         return _tuple(self)
 
     @swizzle_attributes_retriever(sep=sep, type=swizzledtuple)
+    @swizzle_attributes_retriever(sep=sep, type=swizzledtuple, only_attrs=field_names)
     def __getattribute__(self, attr_name):
         return super(_tuple, self).__getattribute__(attr_name)
 
@@ -337,6 +339,13 @@ def collect_attribute_functions(cls):
 
 
 def swizzle_attributes_retriever(attribute_funcs=None, sep=None, type=swizzledtuple):
+def swizzle_attributes_retriever(
+    attribute_funcs=None, sep=None, type=swizzledtuple, only_attrs=None
+):
+    trie = None
+    if not sep and only_attrs:
+        trie = Trie(list(only_attrs))
+
     def _swizzle_attributes_retriever(attribute_funcs):
         if not isinstance(attribute_funcs, list):
             attribute_funcs = [attribute_funcs]
@@ -363,13 +372,25 @@ def swizzle_attributes_retriever(attribute_funcs=None, sep=None, type=swizzledtu
                 attr_parts = split_string(attr_name, sep)
                 arranged_names = attr_parts
                 for part in attr_parts:
+                    if only_attrs and part not in only_attrs:
+                        raise AttributeError(
+                            f"Attribute {part} is not part of an allowed field for swizzling"
+                        )
                     attribute = retrieve_attribute(obj, part)
                     if attribute is not MISSING:
                         matched_attributes.append(attribute)
                     else:
-                        raise AttributeError(
-                            f"No matching attribute found for part: {part}"
-                        )
+                        raise AttributeError(f"No matching attribute found for {part}")
+            elif only_attrs:
+                arranged_names = trie.split_longest_prefix(attr_name)
+                if arranged_names is None:
+                    raise AttributeError(f"No matching attribute found for {attr_name}")
+                for name in arranged_names:
+                    attribute = retrieve_attribute(obj, name)
+                    if attribute is not MISSING:
+                        matched_attributes.append(attribute)
+                    else:
+                        raise AttributeError(f"No matching attribute found for {name}")
             else:
                 # No sep provided, attempt to match substrings
                 i = 0
@@ -414,6 +435,7 @@ def swizzle_attributes_retriever(attribute_funcs=None, sep=None, type=swizzledtu
 
 # Decorator function to enable swizzling for a class
 def swizzle(cls=None, meta=False, sep=None, type=tuple):
+def swizzle(cls=None, meta=False, sep=None, type=tuple, only_attrs=None):
 
     def class_decorator(cls):
         # Collect attribute retrieval functions from the class
@@ -424,6 +446,7 @@ def swizzle(cls=None, meta=False, sep=None, type=tuple):
             cls,
             attribute_funcs[-1].__name__,
             swizzle_attributes_retriever(attribute_funcs, sep, type),
+            swizzle_attributes_retriever(attribute_funcs, sep, type, only_attrs),
         )
 
         # Handle meta-class swizzling if requested
@@ -442,6 +465,7 @@ def swizzle(cls=None, meta=False, sep=None, type=tuple):
                 meta_cls,
                 meta_funcs[-1].__name__,
                 swizzle_attributes_retriever(meta_funcs, sep, type),
+                swizzle_attributes_retriever(meta_funcs, sep, type, only_attrs),
             )
 
         return cls
@@ -457,8 +481,10 @@ class Swizzle(types.ModuleType):
         types.ModuleType.__init__(self, __name__)
         self.__dict__.update(_sys.modules[__name__].__dict__)
 
-    def __call__(self, cls=None, meta=False, sep=None, type=swizzledtuple):
-        return swizzle(cls, meta, sep, type)
+    def __call__(
+        self, cls=None, meta=False, sep=None, type=swizzledtuple, only_attrs=None
+    ):
+        return swizzle(cls, meta, sep, type, only_attrs)
 
 
 _sys.modules[__name__] = Swizzle()
