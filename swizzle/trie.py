@@ -48,14 +48,3 @@ class Trie:
             result.append(query[i:longest_end])
             i = longest_end
         return result
-
-
-if __name__ == "__main__":
-    words = ["mango", "man", "go", "bat", "manbat"]
-    trie = Trie(words)
-
-    print(trie.split_longest_prefix("mangomanmanbat"))  # ['mango', 'man', 'bat']
-    print(trie.split_longest_prefix("manbat"))  # ['manbat']
-    print(trie.split_longest_prefix("mango"))  # ['mango']
-    print(trie.split_longest_prefix("mangoman"))  # ['mango', 'man']
-    print(trie.split_longest_prefix("unknownword"))  # None

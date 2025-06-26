@@ -18,7 +18,7 @@ except ImportError:
 
 _type = builtins.type
 
-__version__ = "2.3.1"
+__version__ = "2.3.2"
 
 MISSING = object()
 
@@ -533,6 +533,10 @@ def swizzle(cls=None, meta=False, sep=None, type=tuple, only_attrs=None):
         return class_decorator
     else:
         return class_decorator(cls)
+
+
+t = swizzledtuple
+# c = swizzledclass
 
 
 class Swizzle(types.ModuleType):
