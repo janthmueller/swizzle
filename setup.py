@@ -7,8 +7,8 @@ from setuptools import find_packages, setup
 
 import swizzle
 
-if sys.version_info < (3, 7):
-    sys.exit("ERROR: swizzle requires Python 3.7+")
+if sys.version_info < (3, 8):
+    sys.exit("ERROR: swizzle requires Python 3.8+")
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
@@ -36,7 +36,7 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3 :: Only",
     ],
-    python_requires=">=3.7",
+    python_requires=">=3.8",
 )
 
 
