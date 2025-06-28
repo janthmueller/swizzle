@@ -1,12 +1,14 @@
 # Copyright (c) 2024 Jan T. Müller <mail@jantmueller.com>
 
-import sys
 import os
-from setuptools import setup, find_packages
+import sys
+
+from setuptools import find_packages, setup
+
 import swizzle
 
-if sys.version_info < (3, 6):
-    sys.exit("ERROR: swizzle requires Python 3.6+")
+if sys.version_info < (3, 7):
+    sys.exit("ERROR: swizzle requires Python 3.7+")
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
@@ -34,7 +36,7 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3 :: Only",
     ],
-    python_requires=">=3.6",
+    python_requires=">=3.7",
 )
 
 
