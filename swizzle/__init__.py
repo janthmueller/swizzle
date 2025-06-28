@@ -523,7 +523,7 @@ def swizzle(cls=None, meta=False, sep=None, type=tuple, only_attrs=None):
                 def cfem_dummy(*args, **kwargs):
                     pass
 
-                cfem = SwizzledMetaType._check_for_existing_members_
+                cfem = getattr(SwizzledMetaType, cfem_name)
                 setattr(SwizzledMetaType, cfem_name, cfem_dummy)
 
             class SwizzledClass(cls, metaclass=SwizzledMetaType):
