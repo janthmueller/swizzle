@@ -441,8 +441,16 @@ def swizzle_attributes_retriever(
                         )
 
             if type == swizzledtuple:
-                field_names = set(arranged_names)
-                field_values = [retrieve_attribute(obj, name) for name in field_names]
+
+                seen = set()
+                field_names, field_values = zip(
+                    *[
+                        (name, matched_attributes[i])
+                        for i, name in enumerate(arranged_names)
+                        if name not in seen and not seen.add(name)
+                    ]
+                )
+
                 name = "swizzledtuple"
                 if hasattr(obj, "__name__"):
                     name = obj.__name__
