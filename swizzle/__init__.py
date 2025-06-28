@@ -4,7 +4,7 @@ import builtins
 import sys as _sys
 import types
 import unicodedata
-from enum import EnumType
+from enum import EnumMeta
 from functools import wraps
 from keyword import iskeyword as _iskeyword
 from operator import itemgetter as _itemgetter
@@ -508,7 +508,7 @@ def swizzle(cls=None, meta=False, sep=None, type=tuple, only_attrs=None):
             class SwizzledMetaType(meta_cls):
                 pass
 
-            if meta_cls == EnumType:
+            if meta_cls == EnumMeta:
 
                 def cfem_dummy(*args, **kwargs):
                     pass
@@ -519,7 +519,7 @@ def swizzle(cls=None, meta=False, sep=None, type=tuple, only_attrs=None):
             class SwizzledClass(cls, metaclass=SwizzledMetaType):
                 pass
 
-            if meta_cls == EnumType:
+            if meta_cls == EnumMeta:
                 SwizzledMetaType._check_for_existing_members_ = cfem
 
             # Preserve metadata on swizzled meta and class
