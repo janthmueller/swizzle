@@ -34,13 +34,6 @@ class XYZNamedTuple(NamedTuple):
 
 
 @swizzle(meta=True)
-class XYZEnumMeta(IntEnum):
-    X = 1
-    Y = 2
-    Z = 3
-
-
-@swizzle(meta=True)
 class TestMeta:
     x = 1
     y = 2
@@ -115,6 +108,12 @@ def test_all_3_letter_swizzles(swz):
 # --- IntEnum meta swizzle ---
 @pytest.mark.skipif(sys.version_info < (3, 11), reason="Requires Python >= 3.11")
 def test_enum_meta_swizzle():
+    @swizzle(meta=True)
+    class XYZEnumMeta(IntEnum):
+        X = 1
+        Y = 2
+        Z = 3
+
     assert XYZEnumMeta.YXZ == (XYZEnumMeta.Y, XYZEnumMeta.X, XYZEnumMeta.Z)
 
 
