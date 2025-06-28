@@ -113,6 +113,7 @@ def test_all_3_letter_swizzles(swz):
 
 
 # --- IntEnum meta swizzle ---
+@pytest.mark.skipif(sys.version_info < (3, 11), reason="Requires Python >= 3.11")
 def test_enum_meta_swizzle():
     assert XYZEnumMeta.YXZ == (XYZEnumMeta.Y, XYZEnumMeta.X, XYZEnumMeta.Z)
 
@@ -222,6 +223,7 @@ def test_meta_swizzle_with_dataclass():
     assert instance.x == 10 and instance.y == 20
 
 
+@pytest.mark.skipif(sys.version_info < (3, 11), reason="Requires Python >= 3.11")
 def test_meta_swizzle_with_enum():
     from enum import Enum, EnumMeta
 
