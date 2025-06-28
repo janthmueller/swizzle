@@ -508,29 +508,19 @@ def swizzle(cls=None, meta=False, sep=None, type=tuple, only_attrs=None):
             class SwizzledMetaType(meta_cls):
                 pass
 
-            cfem_name = (
-                "_check_for_existing_members"
-                if hasattr(SwizzledMetaType, "_check_for_existing_members")
-                else (
-                    "_check_for_existing_members_"
-                    if hasattr(SwizzledMetaType, "_check_for_existing_members_")
-                    else None
-                )
-            )
-
-            if meta_cls == EnumMeta and cfem_name:
+            if meta_cls == EnumMeta:
 
                 def cfem_dummy(*args, **kwargs):
                     pass
 
-                cfem = getattr(SwizzledMetaType, cfem_name)
-                setattr(SwizzledMetaType, cfem_name, cfem_dummy)
+                cfem = SwizzledMetaType._check_for_existing_members_
+                SwizzledMetaType._check_for_existing_members_ = cfem_dummy
 
             class SwizzledClass(cls, metaclass=SwizzledMetaType):
                 pass
 
-            if meta_cls == EnumMeta and cfem_name:
-                setattr(SwizzledMetaType, cfem_name, cfem)
+            if meta_cls == EnumMeta:
+                SwizzledMetaType._check_for_existing_members_ = cfem
 
             # Preserve metadata on swizzled meta and class
             preserve_metadata(SwizzledMetaType, meta_cls)
