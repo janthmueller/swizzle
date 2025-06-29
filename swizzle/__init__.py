@@ -187,7 +187,7 @@ def swizzledtuple(
     if num_fields == 1:
         arg_list += ","
     repr_fmt = "(" + ", ".join(f"{name}=%r" for name in arrange_names) + ")"
-    _dict, _tuple, _len, _map, _zip = dict, tuple, len, map, zip
+    _dict, _tuple, _len, _zip = dict, tuple, len, zip
 
     namespace = {
         "_tuple_new": tuple_new,
