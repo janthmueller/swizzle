@@ -8,15 +8,15 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read     
+  contents: write
+  packages: write
   
 jobs:
   release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      packages: write    
-
+      packages: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
