@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v2.3.5 (2025-06-29)
+
+### Bug Fixes
+
+- **semantic-release**: Repository instead pypi
+  ([`70f0800`](https://github.com/janthmueller/swizzle/commit/70f0800a9eb39a3ed4cffd9f0b334276dc128c07))
+
+
 ## v2.3.4 (2025-06-29)
 
 ### Bug Fixes
