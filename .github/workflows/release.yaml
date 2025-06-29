@@ -2,14 +2,14 @@ name: Release
 
 on:
   workflow_run:
-    workflows: ["Test"]        # Name of your test workflow
+    workflows: ["Test"]
     types:
       - completed
   workflow_dispatch:
 
 permissions:
-  contents: write    # to allow pushing commits and tags
-  packages: write    # for PyPI publishing if applicable
+  contents: write
+  packages: write
 
 jobs:
   release:
@@ -20,9 +20,19 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install build package
+        run: pip install build
+
       - name: Run python-semantic-release
         uses: python-semantic-release/python-semantic-release@v10.1.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PYPI_TOKEN: ${{ secrets.PYPI }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          pypi_token: ${{ secrets.PYPI }}
-          pre_install: pip install build
+          build: true       # run build command before releasing
