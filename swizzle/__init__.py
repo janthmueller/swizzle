@@ -17,10 +17,21 @@ try:
 except ImportError:
     _tuplegetter = lambda index, doc: property(_itemgetter(index), doc=doc)
 
+
+try:
+    from importlib.metadata import PackageNotFoundError
+    from importlib.metadata import version as _version
+
+    __version__ = _version("swizzle")
+except PackageNotFoundError:
+    try:
+        from setuptools_scm import get_version
+
+        __version__ = get_version(root=".", relative_to=__file__)
+    except Exception:
+        __version__ = "0.0.0-dev"
+
 _type = builtins.type
-
-__version__ = get_version("swizzle")
-
 MISSING = object()
 
 
