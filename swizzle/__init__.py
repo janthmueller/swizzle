@@ -38,11 +38,11 @@ MISSING = object()
 def swizzledtuple(
     typename,
     field_names,
+    arrange_names=None,
     *,
     rename=False,
     defaults=None,
     module=None,
-    arrange_names=None,
     sep=None,
 ):
     """
