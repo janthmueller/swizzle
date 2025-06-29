@@ -103,7 +103,7 @@ Create swizzled named tuples inspired by `namedtuple`:
 ```python
 from swizzle import swizzledtuple
 
-Vector = swizzledtuple('Vector', 'x y z')
+Vector = swizzledtuple('Vector', 'x y z') # Equivalent to swizzle.t('Vector', 'x y z')
 
 v = Vector(1, 2, 3)
 
