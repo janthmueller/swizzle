@@ -5,6 +5,7 @@ on:
     workflows: ["Test"]        # Name of your test workflow
     types:
       - completed
+  workflow_dispatch:
 
 jobs:
   release:
