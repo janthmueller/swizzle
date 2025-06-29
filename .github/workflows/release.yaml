@@ -16,9 +16,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Semantic Release
-        uses: cycjimmy/semantic-release-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PYPI_TOKEN: ${{ secrets.PYPI }}
+      - name: Run python-semantic-release
+        uses: python-semantic-release/python-semantic-release@v8  # or latest stable tag
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          pypi_token: ${{ secrets.PYPI }}
 
