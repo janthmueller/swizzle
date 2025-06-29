@@ -367,7 +367,12 @@ def is_valid_sep(s):
 
 
 def swizzle_attributes_retriever(
-    attribute_funcs=None, sep=None, type=swizzledtuple, only_attrs=None
+    getattr_funcs=None,
+    sep=None,
+    type=swizzledtuple,
+    only_attrs=None,
+    *,
+    return_trie=False,
 ):
     trie = None
 
@@ -482,10 +487,16 @@ def swizzle_attributes_retriever(
 
         return retrieve_swizzled_attributes
 
-    if attribute_funcs is not None:
-        return _swizzle_attributes_retriever(attribute_funcs)
+    if getattr_funcs is not None:
+        if return_trie:
+            return _swizzle_attributes_retriever(getattr_funcs), trie
+        else:
+            return _swizzle_attributes_retriever(getattr_funcs)
     else:
-        return _swizzle_attributes_retriever
+        if return_trie:
+            return _swizzle_attributes_retriever, trie
+        else:
+            return _swizzle_attributes_retriever
 
 
 def swizzle(cls=None, meta=False, sep=None, type=tuple, only_attrs=None):
