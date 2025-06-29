@@ -17,7 +17,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run python-semantic-release
-        uses: python-semantic-release/python-semantic-release@v8  # or latest stable tag
+        uses: python-semantic-release/python-semantic-release@v10.1.0  # or latest stable tag
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           pypi_token: ${{ secrets.PYPI }}
