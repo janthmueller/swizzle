@@ -27,7 +27,7 @@ jobs:
 
       - name: Run semantic-release
         env:
-          PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+          PYPI_TOKEN: ${{ secrets.PYPI }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: semantic-release publish || echo "No new release, skipping."
 
