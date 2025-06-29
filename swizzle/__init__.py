@@ -336,7 +336,7 @@ def split_string(string, sep):
 
 
 # Helper function to collect attribute retrieval functions from a class or meta-class
-def collect_attribute_functions(cls):
+def collect_getattr_funcs(cls):
     funcs = []
     if hasattr(cls, "__getattribute__"):
         funcs.append(cls.__getattribute__)
@@ -388,19 +388,19 @@ def swizzle_attributes_retriever(
             "or (2) a pattern of the form '+N' where N is a positive integer."
         )
 
-    def _swizzle_attributes_retriever(attribute_funcs):
-        if not isinstance(attribute_funcs, list):
-            attribute_funcs = [attribute_funcs]
+    def _swizzle_attributes_retriever(getattr_funcs):
+        if not isinstance(getattr_funcs, list):
+            getattr_funcs = [getattr_funcs]
 
         def retrieve_attribute(obj, attr_name):
-            for func in attribute_funcs:
+            for func in getattr_funcs:
                 try:
                     return func(obj, attr_name)
                 except AttributeError:
                     continue
             return MISSING
 
-        @wraps(attribute_funcs[-1])
+        @wraps(getattr_funcs[-1])
         def retrieve_swizzled_attributes(obj, attr_name):
             # Attempt to find an exact attribute match
             attribute = retrieve_attribute(obj, attr_name)
@@ -504,13 +504,13 @@ def swizzle(cls=None, meta=False, sep=None, type=tuple, only_attrs=None):
 
     def class_decorator(cls):
         # Collect attribute retrieval functions from the class
-        attribute_funcs = collect_attribute_functions(cls)
+        getattr_funcs = collect_getattr_funcs(cls)
 
         # Apply the swizzling to the class's attribute retrieval
         setattr(
             cls,
-            attribute_funcs[-1].__name__,
-            swizzle_attributes_retriever(attribute_funcs, sep, type, only_attrs),
+            getattr_funcs[-1].__name__,
+            swizzle_attributes_retriever(getattr_funcs, sep, type, only_attrs),
         )
 
         # Handle meta-class swizzling if requested
@@ -541,7 +541,7 @@ def swizzle(cls=None, meta=False, sep=None, type=tuple, only_attrs=None):
             meta_cls = SwizzledMetaType
             cls = SwizzledClass
 
-            meta_funcs = collect_attribute_functions(meta_cls)
+            meta_funcs = collect_getattr_funcs(meta_cls)
             setattr(
                 meta_cls,
                 meta_funcs[-1].__name__,
