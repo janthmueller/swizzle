@@ -6,6 +6,7 @@ import types
 import unicodedata
 from enum import EnumMeta
 from functools import wraps
+from importlib.metadata import version as get_version
 from keyword import iskeyword as _iskeyword
 from operator import itemgetter as _itemgetter
 
@@ -18,7 +19,7 @@ except ImportError:
 
 _type = builtins.type
 
-__version__ = "2.3.2"
+__version__ = get_version("swizzle")
 
 MISSING = object()
 
