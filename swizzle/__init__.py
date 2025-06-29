@@ -367,12 +367,7 @@ def is_valid_sep(s):
 
 
 def swizzle_attributes_retriever(
-    getattr_funcs=None,
-    sep=None,
-    type=swizzledtuple,
-    only_attrs=None,
-    *,
-    return_trie=False,
+    getattr_funcs=None, sep=None, type=swizzledtuple, only_attrs=None, *, setter=None
 ):
     trie = None
 
@@ -393,11 +388,11 @@ def swizzle_attributes_retriever(
             "or (2) a pattern of the form '+N' where N is a positive integer."
         )
 
-    def _swizzle_attributes_retriever(getattr_funcs):
+    def _swizzle_attributes_retriever(getattr_funcs, setter=None):
         if not isinstance(getattr_funcs, list):
             getattr_funcs = [getattr_funcs]
 
-        def retrieve_attribute(obj, attr_name):
+        def get_attribute(obj, attr_name):
             for func in getattr_funcs:
                 try:
                     return func(obj, attr_name)
@@ -405,12 +400,11 @@ def swizzle_attributes_retriever(
                     continue
             return MISSING
 
-        @wraps(getattr_funcs[-1])
-        def retrieve_swizzled_attributes(obj, attr_name):
+        def retrieve_attributes(obj, attr_name):
             # Attempt to find an exact attribute match
-            attribute = retrieve_attribute(obj, attr_name)
+            attribute = get_attribute(obj, attr_name)
             if attribute is not MISSING:
-                return attribute
+                return [attr_name], [attribute]
 
             matched_attributes = []
             arranged_names = []
@@ -423,7 +417,7 @@ def swizzle_attributes_retriever(
                         raise AttributeError(
                             f"Attribute {part} is not part of an allowed field for swizzling"
                         )
-                    attribute = retrieve_attribute(obj, part)
+                    attribute = get_attribute(obj, part)
                     if attribute is not MISSING:
                         matched_attributes.append(attribute)
                     else:
@@ -433,7 +427,7 @@ def swizzle_attributes_retriever(
                 if arranged_names is None:
                     raise AttributeError(f"No matching attribute found for {attr_name}")
                 for name in arranged_names:
-                    attribute = retrieve_attribute(obj, name)
+                    attribute = get_attribute(obj, name)
                     if attribute is not MISSING:
                         matched_attributes.append(attribute)
                     else:
@@ -445,7 +439,7 @@ def swizzle_attributes_retriever(
                     match_found = False
                     for j in range(len(attr_name), i, -1):
                         substring = attr_name[i:j]
-                        attribute = retrieve_attribute(obj, substring)
+                        attribute = get_attribute(obj, substring)
                         if attribute is not MISSING:
                             matched_attributes.append(attribute)
                             arranged_names.append(substring)
@@ -456,9 +450,14 @@ def swizzle_attributes_retriever(
                         raise AttributeError(
                             f"No matching attribute found for substring: {attr_name[i:]}"
                         )
+            return arranged_names, matched_attributes
 
+        @wraps(getattr_funcs[-1])
+        def get_attributes(obj, attr_name):
+            arranged_names, matched_attributes = retrieve_attributes(obj, attr_name)
+            if len(matched_attributes) == 1:
+                return matched_attributes[0]
             if type == swizzledtuple:
-
                 seen = set()
                 field_names, field_values = zip(
                     *[
@@ -485,18 +484,12 @@ def swizzle_attributes_retriever(
 
             return type(matched_attributes)
 
-        return retrieve_swizzled_attributes
+        return get_attributes
 
     if getattr_funcs is not None:
-        if return_trie:
-            return _swizzle_attributes_retriever(getattr_funcs), trie
-        else:
-            return _swizzle_attributes_retriever(getattr_funcs)
+        return _swizzle_attributes_retriever(getattr_funcs)
     else:
-        if return_trie:
-            return _swizzle_attributes_retriever, trie
-        else:
-            return _swizzle_attributes_retriever
+        return _swizzle_attributes_retriever
 
 
 def swizzle(cls=None, meta=False, sep=None, type=tuple, only_attrs=None):
