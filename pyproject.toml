@@ -41,6 +41,6 @@ version_toml = ["pyproject.toml:project.version"]
 commit_parser = "conventional"
 branch = "main"  # or whichever branch you release from
 upload_to_pypi = true
-upload_to_release = true
+upload_to_release = false
 build_command = "python -m build"
 
