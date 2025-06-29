@@ -10,7 +10,7 @@ on:
 permissions:
   contents: write      
   packages: write      
-
+  
 jobs:
   release:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
@@ -28,18 +28,12 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install python-semantic-release build
+          pip install python-semantic-release build twine
 
-      - name: Run semantic-release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # semantic-release expects GH_TOKEN
-          PYPI_TOKEN: ${{ secrets.PYPI }}
-          GIT_COMMITTER_NAME: "github-actions[bot]"
-          GIT_COMMITTER_EMAIL: "github-actions[bot]@users.noreply.github.com"
-        run: semantic-release version
-
-      - name: Run semantic-release (publish)
+      - name: Run semantic-release (version + publish)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYPI_TOKEN: ${{ secrets.PYPI }}
+          GIT_COMMITTER_NAME: "github-actions[bot]"
+          GIT_COMMITTER_EMAIL: "github-actions[bot]@users.noreply.github.com"
         run: semantic-release publish
