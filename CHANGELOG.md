@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v2.3.6 (2025-06-29)
+
+### Bug Fixes
+
+- Trigger full release
+  ([`8cf10a7`](https://github.com/janthmueller/swizzle/commit/8cf10a7e6ca744caab9aca0980c02ef4072360b8))
+
+
 ## v2.3.5 (2025-06-29)
 
 ### Bug Fixes
