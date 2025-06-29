@@ -2,6 +2,29 @@
 
 <!-- version list -->
 
+## v2.4.0 (2025-06-29)
+
+### Continuous Integration
+
+- **test**: Run on all branches
+  ([`a0b2e84`](https://github.com/janthmueller/swizzle/commit/a0b2e84a4d6d24100d451291f55290e066d42110))
+
+### Documentation
+
+- **readme**: Swizzle.t = swizzledtuple
+  ([`fa087d0`](https://github.com/janthmueller/swizzle/commit/fa087d073eeb786a7d55c13c2cd94ae3b601eeb1))
+
+### Features
+
+- **swizzledtuple**: Arg arrange_name as positional
+  ([`af7abea`](https://github.com/janthmueller/swizzle/commit/af7abeab5b6357ebf5ce7f587b39a39e57867af4))
+
+### Refactoring
+
+- **swizzledtuple**: Removed unused _map
+  ([`a5e4313`](https://github.com/janthmueller/swizzle/commit/a5e431398e9c725f5b046dc6acdc2951edef9dc6))
+
+
 ## v2.3.6 (2025-06-29)
 
 ### Bug Fixes
