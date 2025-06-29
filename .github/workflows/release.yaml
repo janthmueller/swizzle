@@ -30,10 +30,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install python-semantic-release build twine
 
-      - name: Run semantic-release (version + publish)
+      - name: Run semantic-release (version)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYPI_TOKEN: ${{ secrets.PYPI }}
           GIT_COMMITTER_NAME: "github-actions[bot]"
           GIT_COMMITTER_EMAIL: "github-actions[bot]@users.noreply.github.com"
+        run: semantic-release version
+
+      - name: Run semantic-release (publish)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PYPI_TOKEN: ${{ secrets.PYPI }}
         run: semantic-release publish
