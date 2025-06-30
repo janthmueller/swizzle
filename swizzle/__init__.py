@@ -9,6 +9,7 @@ from functools import wraps
 from importlib.metadata import version as get_version
 from keyword import iskeyword as _iskeyword
 from operator import itemgetter as _itemgetter
+from typing import Mapping
 
 from .trie import Trie
 
@@ -336,20 +337,22 @@ def split_string(string, sep):
 
 
 # Helper function to collect attribute retrieval functions from a class or meta-class
-def collect_getattr_funcs(cls):
+def get_getattr_methods(cls):
     funcs = []
     if hasattr(cls, "__getattribute__"):
         funcs.append(cls.__getattribute__)
     if hasattr(cls, "__getattr__"):
         funcs.append(cls.__getattr__)
     if not funcs:
-        raise AttributeError(
-            "No __getattr__ or __getattribute__ found on the class or meta-class"
-        )
+        raise AttributeError("No __getattr__ or __getattribute__ found")
     return funcs
 
 
-# Function to combine multiple attribute retrieval functions
+def get_setattr_method(cls):
+    if hasattr(cls, "__setattr__"):
+        return cls.__setattr__
+    else:
+        raise AttributeError("No __setattr__ found")
 
 
 def is_valid_sep(s):
@@ -367,8 +370,14 @@ def is_valid_sep(s):
 
 
 def swizzle_attributes_retriever(
-    getattr_funcs=None, sep=None, type=swizzledtuple, only_attrs=None, *, setter=None
+    getattr_funcs=None,
+    sep=None,
+    type=swizzledtuple,
+    only_attrs=None,
+    setter=None,
+    strict=False,
 ):
+
     trie = None
 
     if sep == "":
@@ -388,7 +397,7 @@ def swizzle_attributes_retriever(
             "or (2) a pattern of the form '+N' where N is a positive integer."
         )
 
-    def _swizzle_attributes_retriever(getattr_funcs, setter=None):
+    def _swizzle_attributes_retriever(getattr_funcs):
         if not isinstance(getattr_funcs, list):
             getattr_funcs = [getattr_funcs]
 
@@ -484,6 +493,34 @@ def swizzle_attributes_retriever(
 
             return type(matched_attributes)
 
+        def set_attributes(obj, attr_name, value):
+            # maybe use slots instead of strict?
+            try:
+                arranged_names, _ = retrieve_attributes(obj, attr_name)
+            except AttributeError as e:
+                if strict:
+                    raise e
+                else:
+                    return setter(obj, attr_name, value)
+
+            if len(arranged_names) != len(value):
+                raise AttributeError(
+                    f"Expected {len(arranged_names)} attributes {tuple(arranged_names)}, got {len(value)} {tuple(value)}"
+                )
+            kv = {}
+            for k, v in zip(arranged_names, value):
+                _v = kv.get(k, MISSING)
+                if _v is MISSING:
+                    kv[k] = v
+                elif _v is not v:
+                    raise AttributeError(
+                        f"Tries to assign muliple values to attribute {k} but only one is allowed"
+                    )
+            for k, v in kv.items():
+                setter(obj, k, v)
+
+        if setter is not None:
+            return get_attributes, wraps(setter)(set_attributes)
         return get_attributes
 
     if getattr_funcs is not None:
@@ -492,7 +529,15 @@ def swizzle_attributes_retriever(
         return _swizzle_attributes_retriever
 
 
-def swizzle(cls=None, meta=False, sep=None, type=tuple, only_attrs=None):
+def swizzle(
+    cls=None,
+    meta=False,
+    sep=None,
+    type=tuple,
+    only_attrs=None,
+    setter=False,
+    strict=False,
+):
 
     def preserve_metadata(
         target,
@@ -508,14 +553,24 @@ def swizzle(cls=None, meta=False, sep=None, type=tuple, only_attrs=None):
 
     def class_decorator(cls):
         # Collect attribute retrieval functions from the class
-        getattr_funcs = collect_getattr_funcs(cls)
-
-        # Apply the swizzling to the class's attribute retrieval
-        setattr(
-            cls,
-            getattr_funcs[-1].__name__,
-            swizzle_attributes_retriever(getattr_funcs, sep, type, only_attrs),
-        )
+        getattr_methods = get_getattr_methods(cls)
+        if setter:
+            setattr_method = get_setattr_method(cls)
+            new_getter, new_setter = swizzle_attributes_retriever(
+                getattr_methods,
+                sep,
+                type,
+                only_attrs,
+                setter=setattr_method,
+                strict=strict,
+            )
+            setattr(cls, getattr_methods[-1].__name__, new_getter)
+            setattr(cls, setattr_method.__name__, new_setter)
+        else:
+            new_getter = swizzle_attributes_retriever(
+                getattr_methods, sep, type, only_attrs, setter=None, strict=strict
+            )
+            setattr(cls, getattr_methods[-1].__name__, new_getter)
 
         # Handle meta-class swizzling if requested
         if meta:
@@ -545,12 +600,24 @@ def swizzle(cls=None, meta=False, sep=None, type=tuple, only_attrs=None):
             meta_cls = SwizzledMetaType
             cls = SwizzledClass
 
-            meta_funcs = collect_getattr_funcs(meta_cls)
-            setattr(
-                meta_cls,
-                meta_funcs[-1].__name__,
-                swizzle_attributes_retriever(meta_funcs, sep, type, only_attrs),
-            )
+            meta_funcs = get_getattr_methods(meta_cls)
+            if setter:
+                setattr_method = get_setattr_method(meta_cls)
+                new_getter, new_setter = swizzle_attributes_retriever(
+                    meta_funcs,
+                    sep,
+                    type,
+                    only_attrs,
+                    setter=setattr_method,
+                    strict=strict,
+                )
+                setattr(meta_cls, meta_funcs[-1].__name__, new_getter)
+                setattr(meta_cls, setattr_method.__name__, new_setter)
+            else:
+                new_getter = swizzle_attributes_retriever(
+                    meta_funcs, sep, type, only_attrs, setter=None, strict=strict
+                )
+                setattr(meta_cls, meta_funcs[-1].__name__, new_getter)
         return cls
 
     if cls is None:
@@ -569,9 +636,16 @@ class Swizzle(types.ModuleType):
         self.__dict__.update(_sys.modules[__name__].__dict__)
 
     def __call__(
-        self, cls=None, meta=False, sep=None, type=swizzledtuple, only_attrs=None
+        self,
+        cls=None,
+        meta=False,
+        sep=None,
+        type=swizzledtuple,
+        only_attrs=None,
+        setter=False,
+        strict=False,
     ):
-        return swizzle(cls, meta, sep, type, only_attrs)
+        return swizzle(cls, meta, sep, type, only_attrs, setter, strict)
 
 
 _sys.modules[__name__] = Swizzle()

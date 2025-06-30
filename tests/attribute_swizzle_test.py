@@ -333,3 +333,26 @@ def test_only_attrs_repr_behavior():
     obj = OnlyXY()
     repr_str = repr(obj)
     assert "OnlyXY" in repr_str or True  # just make sure repr doesn't crash
+
+
+# --- Tests for `setter` parameter ---
+@swizzle(setter=True)
+class VectorSetter:
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
+
+@swizzle(setter=True, strict=True)
+class VectorStrictSetter:
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
+
+def test_setter():
+    v = VectorSetter(1, 2, 3)
+    v.xyz = (4, 5, 6)
+    assert v.x == 4 and v.y == 5 and v.z == 6
