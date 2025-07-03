@@ -4,12 +4,13 @@ import builtins
 import sys as _sys
 import types
 import unicodedata
-from enum import EnumMeta
+import warnings
+from collections.abc import Iterable
+from enum import Enum, EnumMeta
 from functools import wraps
 from importlib.metadata import version as get_version
 from keyword import iskeyword as _iskeyword
 from operator import itemgetter as _itemgetter
-from typing import Mapping
 
 from .trie import Trie
 
@@ -34,6 +35,11 @@ except PackageNotFoundError:
 
 _type = builtins.type
 MISSING = object()
+
+
+class AttrSource(str, Enum):
+    SLOTS = "slots"
+    CLASSDIR = "classdir"
 
 
 def swizzledtuple(
@@ -206,7 +212,7 @@ def swizzledtuple(
     def _make(cls, iterable):
         result = tuple_new(cls, iterable)
         if _len(result) != num_arrange_fields:
-            raise TypeError(
+            raise ValueError(
                 f"Expected {num_arrange_fields} arguments, got {len(result)}"
             )
         return result
@@ -375,8 +381,13 @@ def swizzle_attributes_retriever(
     type=swizzledtuple,
     only_attrs=None,
     setter=None,
-    strict=False,
 ):
+    assert (
+        only_attrs is None or only_attrs
+    ), "only_attrs must be either None or a non-empty iterable containing strings"
+
+    if isinstance(only_attrs, str):
+        assert only_attrs not in [AttrSource.SLOTS, AttrSource.CLASSDIR]
 
     trie = None
 
@@ -396,6 +407,15 @@ def swizzle_attributes_retriever(
             " (1) a non-empty string containing only letters, digits, or underscores, "
             "or (2) a pattern of the form '+N' where N is a positive integer."
         )
+
+    if sep is not None and only_attrs:
+        if any(sep in attr for attr in only_attrs):
+            warnings.warn(
+                "The attribute separator is part of any of the only_attrs. "
+                "This may lead to unexpected behavior, since the attribute separator"
+                " will be used to split the attribute name. Consider using a different "
+                "separator or only_attrs to avoid this issue.",
+            )
 
     def _swizzle_attributes_retriever(getattr_funcs):
         if not isinstance(getattr_funcs, list):
@@ -494,18 +514,18 @@ def swizzle_attributes_retriever(
             return type(matched_attributes)
 
         def set_attributes(obj, attr_name, value):
-            # maybe use slots instead of strict?
             try:
                 arranged_names, _ = retrieve_attributes(obj, attr_name)
-            except AttributeError as e:
-                if strict:
-                    raise e
-                else:
-                    return setter(obj, attr_name, value)
+            except AttributeError:
+                return setter(obj, attr_name, value)
 
+            if not isinstance(value, Iterable):
+                raise ValueError(
+                    f"Expected an iterable value for swizzle attribute assignment, got {_type(value)}"
+                )
             if len(arranged_names) != len(value):
-                raise AttributeError(
-                    f"Expected {len(arranged_names)} attributes {tuple(arranged_names)}, got {len(value)} {tuple(value)}"
+                raise ValueError(
+                    "too many values to unpack (expected {len(arranged_names)})"
                 )
             kv = {}
             for k, v in zip(arranged_names, value):
@@ -513,8 +533,8 @@ def swizzle_attributes_retriever(
                 if _v is MISSING:
                     kv[k] = v
                 elif _v is not v:
-                    raise AttributeError(
-                        f"Tries to assign muliple values to attribute {k} but only one is allowed"
+                    raise ValueError(
+                        f"Tries to assign muliple values to attribute {k} in one go but only one is allowed"
                     )
             for k, v in kv.items():
                 setter(obj, k, v)
@@ -536,8 +556,82 @@ def swizzle(
     type=tuple,
     only_attrs=None,
     setter=False,
-    strict=False,
 ):
+    """
+    A decorator that adds attribute swizzling capabilities to a class.
+
+    The decorator first attempts to resolve attribute access normally. If, and only if,
+    a direct attribute lookup fails, it then tries to interpret the requested
+    attribute name as a sequence of existing attribute names to be "swizzled".
+    For example, if an object `p` has attributes `x` and `y`, a normal access to
+    `p.x` works as expected, but a failed access to `p.yx` would trigger the
+    swizzling logic and could return `(p.y, p.x)`.
+
+    The decorator can parse attribute names using one of three strategies, depending
+    on the arguments provided:
+
+    **Attribute Retrieval Strategies**
+
+    1.  **Explicit Splitting (`sep`):
+        This strategy uses a clear, unambiguous rule to parse the attribute string.
+        Using a delimiter (e.g., `sep='_'`) makes swizzled attributes visually distinct
+        and easy to read. Using a fixed width (e.g., `sep='+1'`) allows for compact names.
+        Both methods are simple and offer the highest runtime performance.
+
+    2.  **Whitelist-Based Matching (`only_attrs`):
+        This strategy restricts swizzling to a specific list of attribute names.
+        It is useful for creating a well-defined and safe API, as it prevents
+        accidental matching of methods or private attributes and resolves ambiguity
+        if some attribute names are prefixes of others. For efficiency, the allowed
+        names are pre-compiled into a Trie, which makes lookups very fast.
+
+    3.  **Flexible Dynamic Matching (Default):
+        This is the default behavior. It dynamically finds all possible attribute
+        sequences within the string. This is the most flexible method and is perfect
+        for interactive use or for classes with custom `__getattr__` methods or
+        attributes that are added and removed at runtime. While it has more
+        computational overhead, it provides the greatest adaptability for dynamic objects.
+
+    Args:
+        cls (type, optional): The class to be decorated. If `None`, the decorator
+            returns a function that can be applied to a class. Defaults to `None`.
+        meta (bool, optional): If `True`, swizzling is also applied to the class's
+            metaclass, allowing for swizzling on the class attributes themselves.
+            Defaults to `False`.
+        sep (str, optional): Activates the **Explicit Splitting** strategy.
+            If `sep` is in the format `'+N'`, the name is split into N-character chunks.
+            Otherwise, it is split by the `sep` string. If `only_attrs` is provided and
+            all names have the same length `N`, `sep` is automatically set to `'+N'`
+            to ensure the best performance. Defaults to `None`.
+        type (type, optional): The type of the returned collection of attributes.
+            Defaults to `tuple`. For `swizzledtuple`, the swizzled attributes are
+            returned as a `swizzledtuple` instance.
+        only_attrs (iterable of str or AttrSource, optional): Activates the
+            **Whitelist-Based Matching** strategy when `sep` is not provided.
+            Can also be set to `AttrSource.SLOTS` or `AttrSource.CLASSDIR` to dynamically
+            use the attributes from the class's `__slots__` or `dir(cls)`, respectively.
+            Defaults to `None`.
+        setter (bool, optional): If `True`, the decorator also enables swizzling for
+            attribute assignment (e.g., `instance.xy = 1, 2`). It is highly recommended
+            to define `__slots__` on the class when using this, as it prevents typos
+            from accidentally creating new instance attributes. This is especially
+            important when using a non-visually-distinct separator.
+            Defaults to `False`.
+
+    Returns:
+        type or function: If `cls` is provided, returns the decorated class.
+            Otherwise, returns a decorator function that can be applied to a class.
+
+    Example:
+        @swizzle
+        class Point:
+            def __init__(self, x, y):
+                self.x = x
+                self.y = y
+
+        p = Point(1, 2)
+        print(p.yx)  # Output: (2, 1)
+    """
 
     def preserve_metadata(
         target,
@@ -553,7 +647,19 @@ def swizzle(
 
     def class_decorator(cls):
         # Collect attribute retrieval functions from the class
+        nonlocal only_attrs
+        if isinstance(only_attrs, str):
+            if only_attrs == AttrSource.SLOTS:
+                only_attrs = cls.__slots__
+                if not only_attrs:
+                    raise AttributeError(
+                        f"cls.__slots__ cannot be empty for only_attrs = {AttrSource.SLOTS}"
+                    )
+            elif only_attrs == AttrSource.CLASSDIR:
+                only_attrs = dir(cls)
+
         getattr_methods = get_getattr_methods(cls)
+
         if setter:
             setattr_method = get_setattr_method(cls)
             new_getter, new_setter = swizzle_attributes_retriever(
@@ -562,13 +668,12 @@ def swizzle(
                 type,
                 only_attrs,
                 setter=setattr_method,
-                strict=strict,
             )
             setattr(cls, getattr_methods[-1].__name__, new_getter)
             setattr(cls, setattr_method.__name__, new_setter)
         else:
             new_getter = swizzle_attributes_retriever(
-                getattr_methods, sep, type, only_attrs, setter=None, strict=strict
+                getattr_methods, sep, type, only_attrs, setter=None
             )
             setattr(cls, getattr_methods[-1].__name__, new_getter)
 
@@ -609,13 +714,12 @@ def swizzle(
                     type,
                     only_attrs,
                     setter=setattr_method,
-                    strict=strict,
                 )
                 setattr(meta_cls, meta_funcs[-1].__name__, new_getter)
                 setattr(meta_cls, setattr_method.__name__, new_setter)
             else:
                 new_getter = swizzle_attributes_retriever(
-                    meta_funcs, sep, type, only_attrs, setter=None, strict=strict
+                    meta_funcs, sep, type, only_attrs, setter=None
                 )
                 setattr(meta_cls, meta_funcs[-1].__name__, new_getter)
         return cls
@@ -643,9 +747,8 @@ class Swizzle(types.ModuleType):
         type=swizzledtuple,
         only_attrs=None,
         setter=False,
-        strict=False,
     ):
-        return swizzle(cls, meta, sep, type, only_attrs, setter, strict)
+        return swizzle(cls, meta, sep, type, only_attrs, setter)
 
 
 _sys.modules[__name__] = Swizzle()

@@ -344,15 +344,115 @@ class VectorSetter:
         self.z = z
 
 
-@swizzle(setter=True, strict=True)
-class VectorStrictSetter:
+def test_setter():
+    v = VectorSetter(1, 2, 3)
+    v.xyz = (4, 5, 6)
+    assert v.x == 4 and v.y == 5 and v.z == 6
+
+
+def test_setter_multiple_attributes():
+    v = VectorSetter(1, 2, 3)
+    v.xy = (10, 20)
+    assert v.x == 10 and v.y == 20 and v.z == 3
+
+
+def test_setter_duplicate_attributes():
+    v = VectorSetter(1, 2, 3)
+    v.xxy = (10, 10, 20)
+    assert v.x == 10 and v.y == 20 and v.z == 3
+
+
+def test_setter_invalid_length():
+    v = VectorSetter(1, 2, 3)
+    with pytest.raises(ValueError):
+        v.xy = (10, 20, 30)
+
+
+def test_setter_conflicting_values():
+    v = VectorSetter(1, 2, 3)
+    with pytest.raises(ValueError):
+        v.xxy = (10, 11, 20)
+
+
+def test_setter_partial_swizzle():
+    v = VectorSetter(1, 2, 3)
+    v.yz = (5, 6)
+    assert v.x == 1 and v.y == 5 and v.z == 6
+
+
+@swizzle(setter=True, only_attrs=["x", "y"])
+class VectorSetterOnlyXY:
     def __init__(self, x, y, z):
         self.x = x
         self.y = y
         self.z = z
 
 
-def test_setter():
-    v = VectorSetter(1, 2, 3)
+def test_setter_with_only_attrs():
+    v = VectorSetterOnlyXY(1, 2, 3)
+    v.xy = (10, 20)
+    v.xyz = (4, 5, 6)
+    assert v.x == 10 and v.y == 20 and v.z == 3 and v.xyz == (4, 5, 6)
+
+
+@swizzle(setter=True, sep="_")
+class VectorSetterSep:
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
+
+def test_setter_with_sep():
+    v = VectorSetterSep(1, 2, 3)
+    v.x_y = (10, 20)
+    assert v.x == 10 and v.y == 20 and v.z == 3
+
+
+@swizzle(setter=True)
+class VectorSetterSlots:
+    __slots__ = ("x", "y", "z")
+
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
+
+def test_setter_with_slots():
+    v = VectorSetterSlots(1, 2, 3)
     v.xyz = (4, 5, 6)
     assert v.x == 4 and v.y == 5 and v.z == 6
+
+
+@swizzle(setter=True, only_attrs=["x", "y"])
+class VectorSetterSlotsOnlyXY:
+    __slots__ = ("x", "y", "z")
+
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
+
+def test_setter_with_slots_and_only_attrs():
+    v = VectorSetterSlotsOnlyXY(1, 2, 3)
+    v.xy = (10, 20)
+    # xyz is a single attribute since only_attrs is set to ["x", "y"] and xyz is not in __slots__
+    with pytest.raises(AttributeError):
+        v.xyz = (4, 5, 6)
+
+
+@swizzle(meta=True, setter=True)
+class VectorSetterMeta:
+    x = 1
+    y = 2
+    z = 3
+
+
+def test_setter_with_meta():
+    v = VectorSetterMeta
+    v.xyz = (4, 5, 6)
+    assert v.x == 4 and v.y == 5 and v.z == 6
+    v.yxz = (7, 8, 9)
+    assert v.y == 7 and v.x == 8 and v.z == 9
