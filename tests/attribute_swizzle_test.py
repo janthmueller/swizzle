@@ -55,6 +55,7 @@ class Underscore:
     def __init__(self):
         self.x = 1
         self.y = 2
+        self.x_y = 3
 
 
 @swizzle
@@ -140,7 +141,8 @@ def test_separator_invalid():
 
 def test_underscore_sep():
     u = Underscore()
-    assert u.x_y == (1, 2)
+    assert u.x_y == 3
+    assert u.x_x_y == (1, 3)
 
 
 # --- Custom alphabet ---
@@ -456,3 +458,16 @@ def test_setter_with_meta():
     assert v.x == 4 and v.y == 5 and v.z == 6
     v.yxz = (7, 8, 9)
     assert v.y == 7 and v.x == 8 and v.z == 9
+
+
+@swizzle(sep="_", only_attrs=["x", "y", "x_y"])
+class Test:
+    def __init__(self):
+        self.x = 1
+        self.y = 2
+        self.x_y = 3
+
+
+def test_only_attrs_with_sep():
+    t = Test()
+    assert t.x_y_x_x_y_y == (3, 1, 3, 2)

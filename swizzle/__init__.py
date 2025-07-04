@@ -1,4 +1,5 @@
 # Copyright (c) 2024 Jan T. Müller <mail@jantmueller.com>
+# TODO: rework sep, and only_attrs. sep can not be +N anymore but we could provide a attr_len/chunk_len (or if not clashing use an int for only_attrs). sep should work like intendet as a visual seperator and not as an indicator for which method should get used.
 
 import builtins
 import sys as _sys
@@ -333,13 +334,19 @@ def swizzledtuple(
     return result
 
 
-# Helper function to split a string based on a sep
-def split_string(string, sep):
-    if sep[0] == "+":
-        n = int(sep)
-        return [string[i : i + n] for i in range(0, len(string), n)]
-    else:
-        return string.split(sep)
+def split_attr_name(s, split, sep=""):
+    if split == "by_sep":
+        return s.split(sep)
+
+    step = split + len(sep)
+    if step == 0 or (len(s) + len(sep)) % step:
+        raise ValueError("string length incompatible with split/sep")
+
+    parts = [s[i : i + split] for i in range(0, len(s), step)]
+    if sep.join(parts) != s:
+        raise ValueError("separator positions or values don’t match")
+
+    return parts
 
 
 # Helper function to collect attribute retrieval functions from a class or meta-class
@@ -364,8 +371,6 @@ def get_setattr_method(cls):
 def is_valid_sep(s):
     # if not s:
     #     return False
-    if s[0] == "+" and s[1:].isdigit():
-        return True
     for ch in s:
         if ch == "_":
             continue
@@ -380,6 +385,7 @@ def swizzle_attributes_retriever(
     sep=None,
     type=swizzledtuple,
     only_attrs=None,
+    *,
     setter=None,
 ):
     assert (
@@ -389,33 +395,31 @@ def swizzle_attributes_retriever(
     if isinstance(only_attrs, str):
         assert only_attrs not in [AttrSource.SLOTS, AttrSource.CLASSDIR]
 
-    trie = None
-
-    if sep == "":
-        sep = "+1"  # for backwards compatibility, remove on next version
-
-    if sep is None and only_attrs:
-        only_attrs_length = set(len(fname) for fname in only_attrs)
-        if len(only_attrs_length) == 1:
-            sep = f"+{next(iter(only_attrs_length))}"
-        else:
-            trie = Trie(only_attrs)
-
     if sep is not None and not is_valid_sep(sep):
-        raise ValueError(
-            f"Invalid value for sep: {sep!r}. Must be either:"
-            " (1) a non-empty string containing only letters, digits, or underscores, "
-            "or (2) a pattern of the form '+N' where N is a positive integer."
-        )
+        raise ValueError(f"Invalid value for sep: {sep!r}.")
 
-    if sep is not None and only_attrs:
-        if any(sep in attr for attr in only_attrs):
-            warnings.warn(
-                "The attribute separator is part of any of the only_attrs. "
-                "This may lead to unexpected behavior, since the attribute separator"
-                " will be used to split the attribute name. Consider using a different "
-                "separator or only_attrs to avoid this issue.",
-            )
+    if sep is None:
+        sep = ""
+
+    sep_len = len(sep)
+
+    split = None
+    trie = None
+    if only_attrs:
+        if sep and not any(sep in attr for attr in only_attrs):
+            split = "by_sep"
+        elif len(set(len(attr) for attr in only_attrs)) == 1:
+            split = len(next(iter(only_attrs)))
+        if not split:
+            trie = Trie(only_attrs, sep)
+
+    if split:
+        print(split)
+    elif trie:
+        print(trie)
+        print(sep)
+    else:
+        print("no split or trie")
         # TODO: we could simply add the sep before each attr in only_attrs and then add it up front before the attr_name in within getter call.
         # we should also additionally add an arg like ignore_split which just ingores the split process entirely. in this case and that we do not
         # have only attributes we should remove the sep from each striding window (the first attr does not start with sep)
@@ -441,8 +445,8 @@ def swizzle_attributes_retriever(
             matched_attributes = []
             arranged_names = []
             # If a sep is provided, split the name accordingly
-            if sep is not None:
-                attr_parts = split_string(attr_name, sep)
+            if split is not None:
+                attr_parts = split_attr_name(attr_name, split, sep)
                 arranged_names = attr_parts
                 for part in attr_parts:
                     if only_attrs and part not in only_attrs:
@@ -454,28 +458,45 @@ def swizzle_attributes_retriever(
                         matched_attributes.append(attribute)
                     else:
                         raise AttributeError(f"No matching attribute found for {part}")
-            elif only_attrs:
-                arranged_names = trie.split_longest_prefix(attr_name)
-                if arranged_names is None:
-                    raise AttributeError(f"No matching attribute found for {attr_name}")
-                for name in arranged_names:
+            elif trie:
+
+                for i, name in enumerate(trie.split_longest_prefix(attr_name)):
                     attribute = get_attribute(obj, name)
                     if attribute is not MISSING:
+                        arranged_names.append(name)
                         matched_attributes.append(attribute)
                     else:
-                        raise AttributeError(f"No matching attribute found for {name}")
+                        raise AttributeError(
+                            f"No matching attribute found for {name,i}"
+                        )
             else:
                 # No sep provided, attempt to match substrings
                 i = 0
-                while i < len(attr_name):
+                attr_len = len(attr_name)
+
+                while i < attr_len:
                     match_found = False
-                    for j in range(len(attr_name), i, -1):
+                    for j in range(attr_len, i, -1):
                         substring = attr_name[i:j]
                         attribute = get_attribute(obj, substring)
                         if attribute is not MISSING:
                             matched_attributes.append(attribute)
                             arranged_names.append(substring)
-                            i = j  # Move index to end of the matched substring
+
+                            next_pos = j
+                            if sep_len and next_pos < attr_len:
+                                if not attr_name.startswith(sep, next_pos):
+                                    raise AttributeError(
+                                        f"Expected separator '{sep}' at pos {next_pos} in "
+                                        f"'{attr_name}', found '{attr_name[next_pos:next_pos+sep_len]}'"
+                                    )
+                                next_pos += sep_len
+                                if next_pos == attr_len:
+                                    raise AttributeError(
+                                        f"Seperator can not be at the end of the string: {attr_name}"
+                                    )
+
+                            i = next_pos
                             match_found = True
                             break
                     if not match_found:
