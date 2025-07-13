@@ -2,6 +2,60 @@
 
 <!-- version list -->
 
+## v2.5.0 (2025-07-13)
+
+### Bug Fixes
+
+- Rework sep logic
+  ([`19b297e`](https://github.com/janthmueller/swizzle/commit/19b297ec55943c890c0157be939fc06c4ba91b93))
+
+### Chores
+
+- Update readme
+  ([`23fd06c`](https://github.com/janthmueller/swizzle/commit/23fd06c1bbdca7efbfd3e030e6a1d8fa339d9771))
+
+### Documentation
+
+- Review-later
+  ([`e506197`](https://github.com/janthmueller/swizzle/commit/e506197252c04bd3afa9ef79dcc6c63701ebc4cc))
+
+### Features
+
+- Return trie arg - reuse trie in setter
+  ([`eb21a11`](https://github.com/janthmueller/swizzle/commit/eb21a11e9a7add4428b55b48e0c55bb3ba735c41))
+
+- Setter
+  ([`857173b`](https://github.com/janthmueller/swizzle/commit/857173b61d69b40befd9a8574ece2d5e1b0d4f38))
+
+- Setter, only-attrs from slots or dir
+  ([`ea36e50`](https://github.com/janthmueller/swizzle/commit/ea36e5019363f57a90d1dfb902567be387981899))
+
+- Whitelist swizzle attr name length with only_attrs
+  ([`04f77e3`](https://github.com/janthmueller/swizzle/commit/04f77e3e3341b7c2eefb81d5329a70b0e103e6b9))
+
+### Performance Improvements
+
+- Use slots on trie node
+  ([`0369dc3`](https://github.com/janthmueller/swizzle/commit/0369dc39e95cb9dbdc863ef06ecc48cd156c1b75))
+
+### Refactoring
+
+- Changed verror to aerror
+  ([`2951e9e`](https://github.com/janthmueller/swizzle/commit/2951e9e747b19e46f57d9e2a4da539a967660862))
+
+- Comments and formatting
+  ([`3da8d37`](https://github.com/janthmueller/swizzle/commit/3da8d374df66ec80b66ce358c98bb2102e45bacc))
+
+- Remove prints
+  ([`1aa451e`](https://github.com/janthmueller/swizzle/commit/1aa451e6f85bb1460bc208e60e7f07553521792d))
+
+- Rename and chunk functions
+  ([`3e5bd04`](https://github.com/janthmueller/swizzle/commit/3e5bd04c9e43cfb9cd4361462f71adef757b7e26))
+
+- Rename to differentiate between getter/setter
+  ([`82bd8b0`](https://github.com/janthmueller/swizzle/commit/82bd8b0def6f6133d0f9cbbd6c955af8a56bd382))
+
+
 ## v2.4.0 (2025-06-29)
 
 ### Continuous Integration
