@@ -318,11 +318,13 @@ def split_attr_name(s, split, sep=""):
 
     step = split + len(sep)
     if step == 0 or (len(s) + len(sep)) % step:
-        raise ValueError("string length incompatible with split/sep")
+        raise AttributeError(
+            f"length of {s} is incompatible with split={split} and sep={sep}"
+        )
 
     parts = [s[i : i + split] for i in range(0, len(s), step)]
     if sep.join(parts) != s:
-        raise ValueError("separator positions or values don’t match")
+        raise AttributeError("separator positions or values don’t match")
 
     return parts
 
