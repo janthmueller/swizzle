@@ -1,6 +1,3 @@
-# Copyright (c) 2024 Jan T. Müller <mail@jantmueller.com>
-# TODO: rework sep, and only_attrs. sep can not be +N anymore but we could provide a attr_len/chunk_len (or if not clashing use an int for only_attrs). sep should work like intendet as a visual seperator and not as an indicator for which method should get used.
-
 import builtins
 import sys as _sys
 import types
@@ -96,9 +93,9 @@ def swizzledtuple(
         if isinstance(arrange_names, str):
             arrange_names = arrange_names.replace(",", " ").split()
         arrange_names = list(map(str, arrange_names))
-        assert set(arrange_names) == set(
-            field_names
-        ), "Arrangement must contain all field names"
+        assert set(arrange_names) == set(field_names), (
+            "Arrangement must contain all field names"
+        )
     else:
         arrange_names = field_names.copy()
 
@@ -369,9 +366,9 @@ def swizzle_attributes_retriever(
     *,
     setter=None,
 ):
-    assert (
-        only_attrs is None or only_attrs
-    ), "only_attrs must be either None or a non-empty iterable containing strings or an integer greater than 0"
+    assert only_attrs is None or only_attrs, (
+        "only_attrs must be either None or a non-empty iterable containing strings or an integer greater than 0"
+    )
 
     if sep is not None and not is_valid_sep(sep):
         raise ValueError(f"Invalid value for sep: {sep!r}.")
