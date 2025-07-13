@@ -1,4 +1,6 @@
 class TrieNode:
+    __slots__ = "children", "is_end"
+
     def __init__(self):
         self.children = {}
         self.is_end = False
@@ -43,7 +45,7 @@ class Trie:
                 else:
                     raise AttributeError(
                         f"Expected separator '{self.sep}' at pos {i} in "
-                        f"'{query}', found '{query[i:i+self.sep_len]}'"
+                        f"'{query}', found '{query[i : i + self.sep_len]}'"
                     )
             j = i
             children = node.children  # cache children dict
