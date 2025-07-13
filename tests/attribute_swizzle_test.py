@@ -461,7 +461,7 @@ def test_setter_with_meta():
 
 
 @swizzle(sep="_", only_attrs=["x", "y", "x_y"])
-class Test:
+class VectorSepOnlyAttrs:
     def __init__(self):
         self.x = 1
         self.y = 2
@@ -469,5 +469,40 @@ class Test:
 
 
 def test_only_attrs_with_sep():
-    t = Test()
+    t = VectorSepOnlyAttrs()
     assert t.x_y_x_x_y_y == (3, 1, 3, 2)
+
+
+# Test only_attrs with an integer
+@swizzle(only_attrs=1)
+class OnlyXYInt:
+    def __init__(self):
+        self.x = 10
+        self.y = 20
+        self.z = 30
+        self.ab = 40
+
+
+def test_only_attrs_int_valid_swizzle():
+    obj = OnlyXYInt()
+    assert obj.xy == (10, 20)
+    assert obj.yx == (20, 10)
+    with pytest.raises(AttributeError):
+        _ = obj.abab
+
+
+@swizzle(only_attrs=2)
+class OnlyXYInt2:
+    def __init__(self):
+        self.ab = 10
+        self.cd = 20
+        self.x = 30
+
+
+def test_only_attrs_int_2_valid_swizzle():
+    obj = OnlyXYInt2()
+    assert obj.abab == (10, 10)
+    assert obj.cdcd == (20, 20)
+
+    with pytest.raises(AttributeError):
+        _ = obj.xx

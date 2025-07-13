@@ -5,7 +5,6 @@ import builtins
 import sys as _sys
 import types
 import unicodedata
-import warnings
 from collections.abc import Iterable
 from enum import Enum, EnumMeta
 from functools import wraps
@@ -40,7 +39,6 @@ MISSING = object()
 
 class AttrSource(str, Enum):
     SLOTS = "slots"
-    CLASSDIR = "classdir"
 
 
 def swizzledtuple(
@@ -79,23 +77,8 @@ def swizzledtuple(
             If provided, fields will be joined using this separator to create compound attribute names.
             Defaults to None.
 
-            Special case: If all field names have the same length `n` after optional renaming,
-            and `sep` is still None, then `sep` is automatically set to `"+n"` (e.g. "+2").
-            This indicates that names should be split every `n` characters for improved performance.
-
     Returns:
         type: A new subclass of `tuple` with named fields and customized attribute access.
-
-    Notes:
-        - The function is based on `collections.namedtuple` but with additional features such as
-          field rearrangement and swizzled attribute access.
-        - The `arrange_names` argument allows rearranging the field names, and it can include
-          duplicates, which is not possible in a standard `namedtuple`.
-        - The generated named tuple class includes methods like `_make`, `_replace`, `__repr__`,
-          `_asdict`, and `__getnewargs__`, partially customized to handle the rearranged field order.
-        - The `sep` argument enables a custom structure for attribute access, allowing for
-          combined attribute names based on the provided sep. If no sep is provided,
-          standard attribute access is used.
 
     Example:
         >>> Vector = swizzledtuple('Vector', 'x y z', arrange_names='y z x x')
@@ -152,11 +135,11 @@ def swizzledtuple(
             raise TypeError("Type names and field names must be strings")
         if not name.isidentifier():
             raise ValueError(
-                "Type names and field names must be valid " f"identifiers: {name!r}"
+                f"Type names and field names must be valid identifiers: {name!r}"
             )
         if _iskeyword(name):
             raise ValueError(
-                "Type names and field names cannot be a " f"keyword: {name!r}"
+                f"Type names and field names cannot be a keyword: {name!r}"
             )
     seen = set()
     for name in field_names:
@@ -218,9 +201,7 @@ def swizzledtuple(
             )
         return result
 
-    _make.__func__.__doc__ = (
-        f"Make a new {typename} object from a sequence " "or iterable"
-    )
+    _make.__func__.__doc__ = f"Make a new {typename} object from a sequence or iterable"
 
     def _replace(self, /, **kwds):
         def generator():
@@ -236,7 +217,7 @@ def swizzledtuple(
         return result
 
     _replace.__doc__ = (
-        f"Return a new {typename} object replacing specified " "fields with new values"
+        f"Return a new {typename} object replacing specified fields with new values"
     )
 
     def __repr__(self):
@@ -390,10 +371,7 @@ def swizzle_attributes_retriever(
 ):
     assert (
         only_attrs is None or only_attrs
-    ), "only_attrs must be either None or a non-empty iterable containing strings"
-
-    if isinstance(only_attrs, str):
-        assert only_attrs not in [AttrSource.SLOTS, AttrSource.CLASSDIR]
+    ), "only_attrs must be either None or a non-empty iterable containing strings or an integer greater than 0"
 
     if sep is not None and not is_valid_sep(sep):
         raise ValueError(f"Invalid value for sep: {sep!r}.")
@@ -405,7 +383,11 @@ def swizzle_attributes_retriever(
 
     split = None
     trie = None
-    if only_attrs:
+    if isinstance(only_attrs, int):
+        split = only_attrs
+        only_attrs = None
+    elif only_attrs:
+        only_attrs = set(only_attrs)
         if sep and not any(sep in attr for attr in only_attrs):
             split = "by_sep"
         elif len(set(len(attr) for attr in only_attrs)) == 1:
@@ -459,16 +441,13 @@ def swizzle_attributes_retriever(
                     else:
                         raise AttributeError(f"No matching attribute found for {part}")
             elif trie:
-
                 for i, name in enumerate(trie.split_longest_prefix(attr_name)):
                     attribute = get_attribute(obj, name)
                     if attribute is not MISSING:
                         arranged_names.append(name)
                         matched_attributes.append(attribute)
                     else:
-                        raise AttributeError(
-                            f"No matching attribute found for {name,i}"
-                        )
+                        raise AttributeError(f"No matching attribute found for {name}")
             else:
                 # No sep provided, attempt to match substrings
                 i = 0
@@ -488,7 +467,7 @@ def swizzle_attributes_retriever(
                                 if not attr_name.startswith(sep, next_pos):
                                     raise AttributeError(
                                         f"Expected separator '{sep}' at pos {next_pos} in "
-                                        f"'{attr_name}', found '{attr_name[next_pos:next_pos+sep_len]}'"
+                                        f"'{attr_name}', found '{attr_name[next_pos : next_pos + sep_len]}'"
                                     )
                                 next_pos += sep_len
                                 if next_pos == attr_len:
@@ -591,55 +570,37 @@ def swizzle(
     `p.x` works as expected, but a failed access to `p.yx` would trigger the
     swizzling logic and could return `(p.y, p.x)`.
 
-    The decorator can parse attribute names using one of three strategies, depending
-    on the arguments provided:
-
-    **Attribute Retrieval Strategies**
-
-    1.  **Explicit Splitting (`sep`):
-        This strategy uses a clear, unambiguous rule to parse the attribute string.
-        Using a delimiter (e.g., `sep='_'`) makes swizzled attributes visually distinct
-        and easy to read. Using a fixed width (e.g., `sep='+1'`) allows for compact names.
-        Both methods are simple and offer the highest runtime performance.
-
-    2.  **Whitelist-Based Matching (`only_attrs`):
-        This strategy restricts swizzling to a specific list of attribute names.
-        It is useful for creating a well-defined and safe API, as it prevents
-        accidental matching of methods or private attributes and resolves ambiguity
-        if some attribute names are prefixes of others. For efficiency, the allowed
-        names are pre-compiled into a Trie, which makes lookups very fast.
-
-    3.  **Flexible Dynamic Matching (Default):
-        This is the default behavior. It dynamically finds all possible attribute
-        sequences within the string. This is the most flexible method and is perfect
-        for interactive use or for classes with custom `__getattr__` methods or
-        attributes that are added and removed at runtime. While it has more
-        computational overhead, it provides the greatest adaptability for dynamic objects.
-
     Args:
         cls (type, optional): The class to be decorated. If `None`, the decorator
-            returns a function that can be applied to a class. Defaults to `None`.
-        meta (bool, optional): If `True`, swizzling is also applied to the class's
-            metaclass, allowing for swizzling on the class attributes themselves.
+            returns a function that can later be applied to a class. Defaults to `None`.
+
+        meta (bool, optional): If `True`, swizzling is also applied to the class’s
+            metaclass, enabling swizzling of class-level attributes.
             Defaults to `False`.
-        sep (str, optional): Activates the **Explicit Splitting** strategy.
-            If `sep` is in the format `'+N'`, the name is split into N-character chunks.
-            Otherwise, it is split by the `sep` string. If `only_attrs` is provided and
-            all names have the same length `N`, `sep` is automatically set to `'+N'`
-            to ensure the best performance. Defaults to `None`.
-        type (type, optional): The type of the returned collection of attributes.
-            Defaults to `tuple`. For `swizzledtuple`, the swizzled attributes are
-            returned as a `swizzledtuple` instance.
-        only_attrs (iterable of str or AttrSource, optional): Activates the
-            **Whitelist-Based Matching** strategy when `sep` is not provided.
-            Can also be set to `AttrSource.SLOTS` or `AttrSource.CLASSDIR` to dynamically
-            use the attributes from the class's `__slots__` or `dir(cls)`, respectively.
+
+        sep (str, optional): Separator used to distinguish attribute names, e.g., `'_'`
+            in `obj.x_y`. If `None`, attribute names are assumed to be simply concatenated.
             Defaults to `None`.
-        setter (bool, optional): If `True`, the decorator also enables swizzling for
-            attribute assignment (e.g., `instance.xy = 1, 2`). It is highly recommended
-            to define `__slots__` on the class when using this, as it prevents typos
-            from accidentally creating new instance attributes. This is especially
-            important when using a non-visually-distinct separator.
+
+        type (type, optional): The type used for the returned collection of swizzled
+            attributes. Defaults to `swizzledtuple`, which behaves like a `tuple` but may
+            include additional swizzling-aware behavior. Can be set to `tuple` or any
+            other type that accepts positional unpacking of attributes.
+
+        only_attrs (iterable of str, or int, or AttrSource, optional):
+            Specifies which attributes are allowed to be swizzled.
+            - If an iterable of strings, it acts as an allowlist of attribute names.
+            - If an integer, it restricts allowed attribute names to those with
+              the given length.
+            - If set to `AttrSource.SLOTS`, it dynamically uses attributes from the
+              class’s `__slots__`.
+            - If `None`, all attributes are allowed.
+            Defaults to `None`.
+
+        setter (bool, optional): If `True`, enables swizzled attribute assignment
+            (e.g., `obj.xy = 1, 2`). Strongly recommended to define `__slots__` on the
+            class when this is enabled, to prevent accidental creation of new attributes
+            via typos—especially important when no clear separator is used.
             Defaults to `False`.
 
     Returns:
@@ -679,8 +640,6 @@ def swizzle(
                     raise AttributeError(
                         f"cls.__slots__ cannot be empty for only_attrs = {AttrSource.SLOTS}"
                     )
-            elif only_attrs == AttrSource.CLASSDIR:
-                only_attrs = dir(cls)
 
         getattr_methods = get_getattr_methods(cls)
 
