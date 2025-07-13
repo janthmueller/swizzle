@@ -12,10 +12,10 @@ Managing object attributes efficiently can sometimes become cumbersome, especial
 
 ## Features
 
-- **Dynamic Attribute Access**: Retrieve multiple attributes in any specified arrangement.
-- **Reduced Boilerplate**: Eliminate redundant code by avoiding multiple getter methods.
-- **Integration with Existing Classes**: Works seamlessly with regular classes, `dataclass`, and even `Enum` types.
-- **Customizable Matching**: Control attribute matching behavior with parameters like `sep`.
+* **Dynamic Attribute Access**: Retrieve multiple attributes in any specified arrangement.
+* **Reduced Boilerplate**: One call is enough to access multiple attributes.
+* **Integration with Existing Classes**: Works seamlessly with regular classes, `dataclass`, and even `Enum` types.
+* **Swizzled Setters (New!)**: Optionally enable attribute assignment with swizzling syntax (e.g., `vec.xyz = 1,2,3`).
 
 ## Installation
 
@@ -94,6 +94,29 @@ class Axis(IntEnum):
 print(Axis.YXZ)  # Output: Axis(Y=<Axis.Y: 2>, X=<Axis.X: 1>, Z=<Axis.Z: 3>)
 ```
 
+### Swizzled Setters (New!)
+
+Starting with the latest version, Swizzle supports setting multiple attributes at once using swizzled assignment syntax:
+
+```python
+import swizzle
+
+@swizzle(setter=True)
+class Vector:
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
+v = Vector(1, 2, 3)
+
+# Set multiple attributes in swizzled order
+v.zyx = 9, 8, 7
+
+# Access the attributes with swizzle syntax
+print(v.zyx)  # Output: Vector(z=9, y=8, x=7)
+```
+
 ## Advanced Usage
 
 ### Swizzled Named Tuples with `swizzledtuple`
@@ -111,41 +134,42 @@ print(v.yzx)        # Output: Vector(y=2, z=3, x=1)
 print(v.yzx.xxzyzz) # Output: Vector(x=1, x=1, z=3, y=2, z=3, z=3)
 ```
 
-### Custom Separators
+### Custom Separators for Clearer Access
 
-Attributes are matched from left to right, starting with the longest substring match. This behavior can be controlled by the `sep` argument in the swizzle decorator:
+You can customize the separator used between attribute names in swizzle expressions to make them more readable—especially when combining many fields. Use the `sep` argument in the `@swizzle` decorator:
 
 ```python
 import swizzle
 
-@swizzle(meta=True, sep='_')
-class BoundingBox:
-    x = 10
-    y = 20
-    w = 100
-    h = 200
+@swizzle(sep='_')
+class Vector:
+    def __init__(self, x, y, z, w):
+        self.x = x
+        self.y = y
+        self.z = z
+        self.w = w
 
-print(BoundingBox.x_y_w_h)  # Output: BoundingBox(x=10, y=20, w=100, h=200)
+v = Vector(1, 2, 3, 4)
+
+print(v.x_y_z_w)  # Output: Vector(x=1, y=2, z=3, w=4)
 ```
+
+This helps visually separate attribute names, making swizzled expressions more readable and less error-prone in complex cases.
 
 ## Understanding Swizzling
 
 Swizzling allows:
 
-- **Rearrangement**: Access attributes in any order (e.g., `v.yzx`).
-- **Duplication**: Access the same attribute multiple times (e.g., `v.xxy`).
-- **Dynamic Composition**: Create new instances with desired attribute arrangements.
+* **Rearrangement**: Access attributes in any order (e.g., `v.yzx`).
+* **Duplication**: Access the same attribute multiple times (e.g., `v.xxy`).
+* **Dynamic Composition**: Create new instances with desired attribute arrangements.
+* **Swizzled Setters**: Assign multiple attributes simultaneously in any order (e.g., `v.xyz = 1,2,3`).
 
 ## Benefits
 
-- **Efficient Attribute Management**: Simplify complex attribute combinations.
-- **Dynamic Access Patterns**: No need for predefined attribute combinations.
-- **Cleaner Codebase**: Reduce redundancy and improve maintainability.
-- **Enhanced Readability**: Code becomes more expressive and intuitive.
-
-## Conclusion
-
-Swizzle is a powerful tool that streamlines attribute management in Python. It offers a flexible and efficient way to access and manipulate object attributes, making your code cleaner and more maintainable.
+* **Efficient Attribute Management**: Simplify complex attribute combinations.
+* **Dynamic Access Patterns**: No need for predefined attribute combinations.
+* **Cleaner Codebase**: Reduce redundancy and improve maintainability.
 
 ## License
 
@@ -155,10 +179,3 @@ This project is licensed under the terms of the MIT license. See the [LICENSE](h
 
 Contributions are welcome! Feel free to submit a Pull Request or open an Issue on GitHub.
 
-## Acknowledgments
-
-Inspired by swizzling in graphics programming, Swizzle brings similar flexibility to Python attribute management.
-
----
-
-Give Swizzle a try and see how it can simplify your Python projects!
