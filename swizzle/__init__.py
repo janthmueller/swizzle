@@ -395,17 +395,6 @@ def swizzle_attributes_retriever(
         if not split:
             trie = Trie(only_attrs, sep)
 
-    if split:
-        print(split)
-    elif trie:
-        print(trie)
-        print(sep)
-    else:
-        print("no split or trie")
-        # TODO: we could simply add the sep before each attr in only_attrs and then add it up front before the attr_name in within getter call.
-        # we should also additionally add an arg like ignore_split which just ingores the split process entirely. in this case and that we do not
-        # have only attributes we should remove the sep from each striding window (the first attr does not start with sep)
-
     def _swizzle_attributes_retriever(getattr_funcs):
         if not isinstance(getattr_funcs, list):
             getattr_funcs = [getattr_funcs]
