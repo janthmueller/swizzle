@@ -506,7 +506,7 @@ def swizzle(
     cls=None,
     meta=False,
     sep=None,
-    type=tuple,
+    type=swizzledtuple,
     only_attrs=None,
     setter=False,
 ):
