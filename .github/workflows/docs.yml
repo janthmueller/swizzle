@@ -1,0 +1,39 @@
+name: Build and Deploy Docs
+
+on:
+  workflow_run:
+    workflows: ["Test"]
+    types:
+      - completed
+
+permissions:
+  contents: write
+
+jobs:
+  build-docs:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install pdoc
+        run: pip install pdoc
+
+      - name: Generate HTML docs with pdoc
+        run: pdoc -d google -o docs swizzle
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs
+          publish_branch: gh-pages
+
+

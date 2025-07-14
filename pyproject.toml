@@ -29,7 +29,7 @@ text = "MIT"
 
 [project.urls]
 homepage = "https://github.com/janthmueller/swizzle"
-documentation = "https://github.com/janthmueller/swizzle/blob/main/README.md"
+documentation = "https://janthmueller.github.io/swizzle/"
 source = "https://github.com/janthmueller/swizzle"
 tracker = "https://github.com/janthmueller/swizzle/issues"
 

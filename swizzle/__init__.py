@@ -72,26 +72,17 @@ def swizzledtuple(
     - Supports custom default values, modules, and attribute formatting.
 
     Args:
-
         typename (str): Name of the new named tuple type.
-
         field_names (Sequence[str] | str): List of field names, or a single string that will be split.
-
         rename (bool, optional): If True, invalid field names are replaced with positional names.
             Defaults to False.
-
         defaults (Sequence, optional): Default values for fields. Defaults to None.
-
         module (str, optional): Module name where the tuple is defined. Defaults to the caller's module.
-
-        arrange_names (Sequence[str], optional): Optional ordering of fields for the final structure.
+        arrange_names (Sequence[str] | str, optional): Optional ordering of fields for the final structure.
             Can include duplicates.
-
         sep (str, optional): Separator string used to construct compound attribute names.
-            If provided, attributes like `v.x_y` become accessible. Defaults to None.
-
+            If sep = '_' provided, attributes like `v.x_y` become accessible. Defaults to None.
     Returns:
-
         Type: A new subclass of `tuple` with named fields and custom swizzle behavior.
 
     Example:
@@ -528,33 +519,25 @@ def swizzle(
     `p.x` behaves normally, but `p.yx` triggers swizzling logic and returns `(p.y, p.x)`.
 
     Args:
-
         cls (type, optional): Class to decorate. If `None`, returns a decorator function
             for later use. Defaults to `None`.
-
         meta (bool, optional): If `True`, applies swizzling to the class’s metaclass,
             enabling swizzling of class-level attributes. Defaults to `False`.
-
         sep (str, optional): Separator used between attribute names (e.g., `'_'` in `obj.x_y`).
             If `None`, attributes are concatenated directly. Defaults to `None`.
-
         type (type, optional): Type used for the returned collection of swizzled attributes.
             Defaults to `swizzledtuple` (a tuple subclass with swizzling behavior). Can be
             set to `tuple` or any compatible type.
-
         only_attrs (iterable of str, int, or AttrSource, optional): Specifies allowed attributes
             for swizzling:
             - Iterable of strings: allowlist of attribute names.
             - Integer: restricts to attribute names of that length.
             - `AttrSource.SLOTS`: uses attributes from the class’s `__slots__`.
             - `None`: all attributes allowed. Defaults to `None`.
-
         setter (bool, optional): Enables assignment to swizzled attributes (e.g., `obj.xy = 1, 2`).
             Strongly recommended to define `__slots__` when enabled to avoid accidental new attributes.
             Defaults to `False`.
-
     Returns:
-
         type or callable: If `cls` is provided, returns the decorated class. Otherwise, returns
         a decorator function to apply later.
 
