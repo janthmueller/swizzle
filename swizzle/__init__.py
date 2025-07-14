@@ -78,10 +78,10 @@ def swizzledtuple(
             Defaults to False.
         defaults (Sequence, optional): Default values for fields. Defaults to None.
         module (str, optional): Module name where the tuple is defined. Defaults to the caller's module.
-        arrange_names (Sequence[str] | str, optional): Optional ordering of fields for the final structure.
+        arrange_names (Sequence[str] |  str, optional): Optional ordering of fields for the final structure.
             Can include duplicates.
         sep (str, optional): Separator string used to construct compound attribute names.
-            If sep = '_' provided, attributes like `v.x_y` become accessible. Defaults to None.
+            If `sep = '_'` provided, attributes like `v.x_y` become accessible. Defaults to None.
     Returns:
         Type: A new subclass of `tuple` with named fields and custom swizzle behavior.
 
