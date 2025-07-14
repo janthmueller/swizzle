@@ -2,6 +2,29 @@
 
 <!-- version list -->
 
+## v2.5.1 (2025-07-14)
+
+### Bug Fixes
+
+- Use same defaults as module call
+  ([`b8d92d3`](https://github.com/janthmueller/swizzle/commit/b8d92d3419a82447fd07448bd056c0322e8a5198))
+
+### Chores
+
+- Ignore docs
+  ([`1fa6b84`](https://github.com/janthmueller/swizzle/commit/1fa6b84084d6f427f4ad46ebbe91d618be2c86f4))
+
+### Documentation
+
+- Fix typo
+  ([`290af1f`](https://github.com/janthmueller/swizzle/commit/290af1f879bdb44380f7bc12114307efd83c565c))
+
+### Refactoring
+
+- Helper functions to utils
+  ([`812deca`](https://github.com/janthmueller/swizzle/commit/812decaf6cfa9080c99da5d51bb2c82a5c2cd4ac))
+
+
 ## v2.5.0 (2025-07-13)
 
 ### Bug Fixes
