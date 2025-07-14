@@ -1,7 +1,6 @@
 import builtins
 import sys as _sys
 import types
-import unicodedata
 from collections.abc import Iterable
 from enum import Enum, EnumMeta
 from functools import wraps
@@ -10,6 +9,8 @@ from keyword import iskeyword as _iskeyword
 from operator import itemgetter as _itemgetter
 
 from .trie import Trie
+from .utils import (get_getattr_methods, get_setattr_method, is_valid_sep,
+                    split_attr_name)
 
 try:
     from _collections import _tuplegetter
@@ -30,11 +31,21 @@ except PackageNotFoundError:
     except Exception:
         __version__ = "0.0.0-dev"
 
+__all__ = [
+    "swizzledtuple",
+    "t",
+    "AttrSource",
+    "swizzle",
+    "swizzle_attributes_retriever",
+]
+
 _type = builtins.type
 MISSING = object()
 
 
 class AttrSource(str, Enum):
+    """Enum for specifying how to retrieve attributes from a class."""
+
     SLOTS = "slots"
 
 
@@ -49,41 +60,49 @@ def swizzledtuple(
     sep=None,
 ):
     """
-    Create a custom named tuple class with swizzled attributes, allowing for rearranged field names
-    and customized attribute access.
+    Creates a custom named tuple class with *swizzled attributes*, allowing for rearranged field names
+    and flexible attribute access patterns.
 
-    This function generates a new subclass of `tuple` with named fields, similar to Python's
-    `collections.namedtuple`. However, it extends the functionality by allowing field names to be
-    rearranged, and attributes to be accessed with a customizable sep. The function also
-    provides additional safeguards for field naming and attribute access.
+    This function generates a subclass of Python's built-in `tuple`, similar to `collections.namedtuple`,
+    but with additional features:
+
+    - Field names can be rearranged using `arrange_names`.
+    - Attribute access can be customized using a separator string (`sep`).
+    - Invalid field names can be automatically renamed (`rename=True`).
+    - Supports custom default values, modules, and attribute formatting.
 
     Args:
-        typename (str): The name of the new named tuple type.
-        field_names (sequence of str or str): A sequence of field names for the tuple. If given as
-            a single string, it will be split into separate field names.
-        rename (bool, optional): If True, invalid field names are automatically replaced with
-            positional names. Defaults to False.
-        defaults (sequence, optional): Default values for the fields. Defaults to None.
-        module (str, optional): The module name in which the named tuple is defined. Defaults to
-            the caller's module.
-        arrange_names (sequence of str, optional): A sequence of field names indicating the order
-            in which fields should be arranged in the resulting named tuple. This allows for fields
-            to be rearranged and, unlike standard `namedtuple`, can include duplicates. Defaults
-            to the order given in `field_names`.
-        sep (str, optional): A separator string used to control how attribute names are constructed.
-            If provided, fields will be joined using this separator to create compound attribute names.
-            Defaults to None.
+
+        typename (str): Name of the new named tuple type.
+
+        field_names (Sequence[str] | str): List of field names, or a single string that will be split.
+
+        rename (bool, optional): If True, invalid field names are replaced with positional names.
+            Defaults to False.
+
+        defaults (Sequence, optional): Default values for fields. Defaults to None.
+
+        module (str, optional): Module name where the tuple is defined. Defaults to the caller's module.
+
+        arrange_names (Sequence[str], optional): Optional ordering of fields for the final structure.
+            Can include duplicates.
+
+        sep (str, optional): Separator string used to construct compound attribute names.
+            If provided, attributes like `v.x_y` become accessible. Defaults to None.
 
     Returns:
-        type: A new subclass of `tuple` with named fields and customized attribute access.
+
+        Type: A new subclass of `tuple` with named fields and custom swizzle behavior.
 
     Example:
-        >>> Vector = swizzledtuple('Vector', 'x y z', arrange_names='y z x x')
-        >>> # Test the swizzle
-        >>> v = Vector(1, 2, 3)
-        >>> print(v)  # Output: Vector(y=2, z=3, x=1, x=1)
-        >>> print(v.yzx)  # Output: Vector(y=2, z=3, x=1)
-        >>> print(v.yzx.xxzyzz)  # Output: Vector(x=1, x=1, z=3, y=2, z=3, z=3)
+        ```python
+        Vector = swizzledtuple("Vector", "x y z", arrange_names="y z x x")
+        v = Vector(1, 2, 3)
+
+        print(v)              # Vector(y=2, z=3, x=1, x=1)
+        print(v.yzx)          # Vector(y=2, z=3, x=1)
+        print(v.yzx.xxzyzz)   # Vector(x=1, x=1, z=3, y=2, z=3, z=3)
+        ```
     """
 
     if isinstance(field_names, str):
@@ -93,9 +112,9 @@ def swizzledtuple(
         if isinstance(arrange_names, str):
             arrange_names = arrange_names.replace(",", " ").split()
         arrange_names = list(map(str, arrange_names))
-        assert set(arrange_names) == set(field_names), (
-            "Arrangement must contain all field names"
-        )
+        assert set(arrange_names) == set(
+            field_names
+        ), "Arrangement must contain all field names"
     else:
         arrange_names = field_names.copy()
 
@@ -312,54 +331,6 @@ def swizzledtuple(
     return result
 
 
-def split_attr_name(s, split, sep=""):
-    if split == "by_sep":
-        return s.split(sep)
-
-    step = split + len(sep)
-    if step == 0 or (len(s) + len(sep)) % step:
-        raise AttributeError(
-            f"length of {s} is incompatible with split={split} and sep={sep}"
-        )
-
-    parts = [s[i : i + split] for i in range(0, len(s), step)]
-    if sep.join(parts) != s:
-        raise AttributeError("separator positions or values don’t match")
-
-    return parts
-
-
-# Helper function to collect attribute retrieval functions from a class or meta-class
-def get_getattr_methods(cls):
-    funcs = []
-    if hasattr(cls, "__getattribute__"):
-        funcs.append(cls.__getattribute__)
-    if hasattr(cls, "__getattr__"):
-        funcs.append(cls.__getattr__)
-    if not funcs:
-        raise AttributeError("No __getattr__ or __getattribute__ found")
-    return funcs
-
-
-def get_setattr_method(cls):
-    if hasattr(cls, "__setattr__"):
-        return cls.__setattr__
-    else:
-        raise AttributeError("No __setattr__ found")
-
-
-def is_valid_sep(s):
-    # if not s:
-    #     return False
-    for ch in s:
-        if ch == "_":
-            continue
-        cat = unicodedata.category(ch)
-        if not (cat.startswith("L") or cat == "Nd"):
-            return False
-    return True
-
-
 def swizzle_attributes_retriever(
     getattr_funcs=None,
     sep=None,
@@ -368,9 +339,9 @@ def swizzle_attributes_retriever(
     *,
     setter=None,
 ):
-    assert only_attrs is None or only_attrs, (
-        "only_attrs must be either None or a non-empty iterable containing strings or an integer greater than 0"
-    )
+    assert (
+        only_attrs is None or only_attrs
+    ), "only_attrs must be either None or a non-empty iterable containing strings or an integer greater than 0"
 
     if sep is not None and not is_valid_sep(sep):
         raise ValueError(f"Invalid value for sep: {sep!r}.")
@@ -549,53 +520,46 @@ def swizzle(
     setter=False,
 ):
     """
-    A decorator that adds attribute swizzling capabilities to a class.
+    Decorator that adds attribute swizzling capabilities to a class.
 
-    The decorator first attempts to resolve attribute access normally. If, and only if,
-    a direct attribute lookup fails, it then tries to interpret the requested
-    attribute name as a sequence of existing attribute names to be "swizzled".
-    For example, if an object `p` has attributes `x` and `y`, a normal access to
-    `p.x` works as expected, but a failed access to `p.yx` would trigger the
-    swizzling logic and could return `(p.y, p.x)`.
+    When accessing an attribute, normal lookup is attempted first. If that fails,
+    the attribute name is interpreted as a sequence of existing attribute names to
+    be "swizzled." For example, if an object `p` has attributes `x` and `y`, then
+    `p.x` behaves normally, but `p.yx` triggers swizzling logic and returns `(p.y, p.x)`.
 
     Args:
-        cls (type, optional): The class to be decorated. If `None`, the decorator
-            returns a function that can later be applied to a class. Defaults to `None`.
 
-        meta (bool, optional): If `True`, swizzling is also applied to the class’s
-            metaclass, enabling swizzling of class-level attributes.
-            Defaults to `False`.
+        cls (type, optional): Class to decorate. If `None`, returns a decorator function
+            for later use. Defaults to `None`.
 
-        sep (str, optional): Separator used to distinguish attribute names, e.g., `'_'`
-            in `obj.x_y`. If `None`, attribute names are assumed to be simply concatenated.
-            Defaults to `None`.
+        meta (bool, optional): If `True`, applies swizzling to the class’s metaclass,
+            enabling swizzling of class-level attributes. Defaults to `False`.
 
-        type (type, optional): The type used for the returned collection of swizzled
-            attributes. Defaults to `swizzledtuple`, which behaves like a `tuple` but may
-            include additional swizzling-aware behavior. Can be set to `tuple` or any
-            other type that accepts positional unpacking of attributes.
+        sep (str, optional): Separator used between attribute names (e.g., `'_'` in `obj.x_y`).
+            If `None`, attributes are concatenated directly. Defaults to `None`.
 
-        only_attrs (iterable of str, or int, or AttrSource, optional):
-            Specifies which attributes are allowed to be swizzled.
-            - If an iterable of strings, it acts as an allowlist of attribute names.
-            - If an integer, it restricts allowed attribute names to those with
-              the given length.
-            - If set to `AttrSource.SLOTS`, it dynamically uses attributes from the
-              class’s `__slots__`.
-            - If `None`, all attributes are allowed.
-            Defaults to `None`.
+        type (type, optional): Type used for the returned collection of swizzled attributes.
+            Defaults to `swizzledtuple` (a tuple subclass with swizzling behavior). Can be
+            set to `tuple` or any compatible type.
 
-        setter (bool, optional): If `True`, enables swizzled attribute assignment
-            (e.g., `obj.xy = 1, 2`). Strongly recommended to define `__slots__` on the
-            class when this is enabled, to prevent accidental creation of new attributes
-            via typos—especially important when no clear separator is used.
+        only_attrs (iterable of str, int, or AttrSource, optional): Specifies allowed attributes
+            for swizzling:
+            - Iterable of strings: allowlist of attribute names.
+            - Integer: restricts to attribute names of that length.
+            - `AttrSource.SLOTS`: uses attributes from the class’s `__slots__`.
+            - `None`: all attributes allowed. Defaults to `None`.
+
+        setter (bool, optional): Enables assignment to swizzled attributes (e.g., `obj.xy = 1, 2`).
+            Strongly recommended to define `__slots__` when enabled to avoid accidental new attributes.
             Defaults to `False`.
 
     Returns:
-        type or function: If `cls` is provided, returns the decorated class.
-            Otherwise, returns a decorator function that can be applied to a class.
+
+        type or callable: If `cls` is provided, returns the decorated class. Otherwise, returns
+        a decorator function to apply later.
 
     Example:
+        ```python
         @swizzle
         class Point:
             def __init__(self, x, y):
@@ -604,6 +568,7 @@ def swizzle(
 
         p = Point(1, 2)
         print(p.yx)  # Output: (2, 1)
+        ```
     """
 
     def preserve_metadata(
