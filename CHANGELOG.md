@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v2.5.2 (2025-07-15)
+
+### Bug Fixes
+
+- Only_attrs can be empty sequence
+  ([`fae2cdb`](https://github.com/janthmueller/swizzle/commit/fae2cdb6b8c248038e2253e17fe466ab64c9e559))
+
+
 ## v2.5.1 (2025-07-14)
 
 ### Bug Fixes

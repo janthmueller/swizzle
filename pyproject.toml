@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "swizzle"
-version = "2.5.1"
+version = "2.5.2"
 readme = "README.md"
 
 description = "Swizzle enables the retrieval of multiple attributes, similar to swizzling in computer graphics."
