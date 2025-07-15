@@ -179,3 +179,19 @@ def test_repr_with_longest_match():
     swz = t.rgbrgb
     assert swz == (999, 999)
     assert swz.rgb == 999
+
+
+def test_getitem():
+    T = swizzledtuple("T", "x y z")
+    t = T(1, 2, 3)
+    assert t[0] == 1
+    assert t[1] == 2
+    assert t[2] == 3
+    assert t[0:2] == (1, 2)
+    assert t[:2] == (1, 2)
+    assert t[1:] == (2, 3)
+    assert t[:] == (1, 2, 3)
+    assert t[-1] == 3
+    assert t[-2:] == (2, 3)
+    assert t[:-1] == (1, 2)
+    assert t[3:] == ()

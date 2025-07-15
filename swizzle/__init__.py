@@ -330,10 +330,6 @@ def swizzle_attributes_retriever(
     *,
     setter=None,
 ):
-    assert (
-        only_attrs is None or only_attrs
-    ), "only_attrs must be either None or a non-empty iterable containing strings or an integer greater than 0"
-
     if sep is not None and not is_valid_sep(sep):
         raise ValueError(f"Invalid value for sep: {sep!r}.")
 
