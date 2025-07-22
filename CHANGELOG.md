@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v2.6.0 (2025-07-22)
+
+### Features
+
+- Attr source fields
+  ([`e9c626b`](https://github.com/janthmueller/swizzle/commit/e9c626b93aa5751477541d4084a24e7e0b4eec68))
+
+
 ## v2.5.2 (2025-07-15)
 
 ### Bug Fixes
