@@ -2,6 +2,8 @@ import builtins
 import sys as _sys
 import types
 from collections.abc import Iterable
+from dataclasses import fields as dataclass_fields
+from dataclasses import is_dataclass
 from enum import Enum, EnumMeta
 from functools import wraps
 from importlib.metadata import version as get_version
@@ -9,8 +11,12 @@ from keyword import iskeyword as _iskeyword
 from operator import itemgetter as _itemgetter
 
 from .trie import Trie
-from .utils import (get_getattr_methods, get_setattr_method, is_valid_sep,
-                    split_attr_name)
+from .utils import (
+    get_getattr_methods,
+    get_setattr_method,
+    is_valid_sep,
+    split_attr_name,
+)
 
 try:
     from _collections import _tuplegetter
@@ -47,6 +53,7 @@ class AttrSource(str, Enum):
     """Enum for specifying how to retrieve attributes from a class."""
 
     SLOTS = "slots"
+    FIELDS = "fields"
 
 
 def swizzledtuple(
@@ -103,9 +110,9 @@ def swizzledtuple(
         if isinstance(arrange_names, str):
             arrange_names = arrange_names.replace(",", " ").split()
         arrange_names = list(map(str, arrange_names))
-        assert set(arrange_names) == set(
-            field_names
-        ), "Arrangement must contain all field names"
+        assert set(arrange_names) == set(field_names), (
+            "Arrangement must contain all field names"
+        )
     else:
         arrange_names = field_names.copy()
 
@@ -483,7 +490,7 @@ def swizzle_attributes_retriever(
                     kv[k] = v
                 elif _v is not v:
                     raise ValueError(
-                        f"Tries to assign muliple values to attribute {k} in one go but only one is allowed"
+                        f"Tries to assign different values to attribute {k} in one go but only one is allowed"
                     )
             for k, v in kv.items():
                 setter(obj, k, v)
@@ -569,8 +576,21 @@ def swizzle(
             if only_attrs == AttrSource.SLOTS:
                 only_attrs = cls.__slots__
                 if not only_attrs:
-                    raise AttributeError(
+                    raise ValueError(
                         f"cls.__slots__ cannot be empty for only_attrs = {AttrSource.SLOTS}"
+                    )
+            elif only_attrs == AttrSource.FIELDS:
+                if hasattr(cls, "_fields"):
+                    only_attrs = cls._fields
+                elif is_dataclass(cls):
+                    only_attrs = [f.name for f in dataclass_fields(cls)]
+                else:
+                    raise AttributeError(
+                        f"No fields _fields or dataclass fields found in {cls} for only_attrs = {AttrSource.FIELDS}"
+                    )
+                if not only_attrs:
+                    raise ValueError(
+                        f"Fields can not be empty for only_attrs = {AttrSource.FIELDS}"
                     )
 
         getattr_methods = get_getattr_methods(cls)

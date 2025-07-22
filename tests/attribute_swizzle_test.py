@@ -18,8 +18,8 @@ class Vector:
         self.z = z
 
 
-@dataclass
 @swizzle
+@dataclass
 class XYZ:
     x: int
     y: int
@@ -506,3 +506,27 @@ def test_only_attrs_int_2_valid_swizzle():
 
     with pytest.raises(AttributeError):
         _ = obj.xx
+
+
+# --- Test only_attrs with fields ---
+@swizzle(only_attrs=swizzle.AttrSource.FIELDS)
+@dataclass
+class OnlyXYFields:
+    x: int
+    y: int
+
+
+def test_only_attrs_fields_valid_swizzle():
+    obj = OnlyXYFields(10, 20)
+    assert obj.yx == (20, 10)
+
+
+@swizzle(only_attrs=swizzle.AttrSource.FIELDS)
+class OnlyXYFields2(NamedTuple):
+    x: int
+    y: int
+
+
+def test_only_attrs_fields_2_valid_swizzle():
+    obj = OnlyXYFields2(10, 20)
+    assert obj.yx == (20, 10)
