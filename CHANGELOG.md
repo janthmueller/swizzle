@@ -2,6 +2,19 @@
 
 <!-- version list -->
 
+## v2.6.1 (2025-08-06)
+
+### Bug Fixes
+
+- Clarify error message on attribute unpack length mismatch
+  ([`79995cb`](https://github.com/janthmueller/swizzle/commit/79995cbd8a6f051ea129d5ec9c221e630c4dfe20))
+
+### Chores
+
+- Update readme
+  ([`05e0a72`](https://github.com/janthmueller/swizzle/commit/05e0a72c2ff222d8e21666df84481c04ab4377b5))
+
+
 ## v2.6.0 (2025-07-22)
 
 ### Features
