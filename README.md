@@ -8,12 +8,11 @@
 
 **Swizzle** is a Python package that enhances attribute access, allowing for flexible retrieval of multiple attributes based on specified arrangements of their names.
 
-Managing object attributes efficiently can sometimes become cumbersome, especially when you need to access multiple attributes in various combinations. Swizzle simplifies this process by extending Python's attribute access mechanisms, enabling you to access attributes in any order or combination without explicitly referencing the instance every time or defining new methods for each combination.
+Managing object attributes efficiently can sometimes become cumbersome, especially when you need to access multiple attributes in various combinations. Swizzle simplifies this process by extending Python's attribute access mechanisms, enabling you to access attributes in any order or combination without explicitly referencing the instance every time. 
 
 ## Features
 
 * **Dynamic Attribute Access**: Retrieve multiple attributes in any specified arrangement.
-* **Reduced Boilerplate**: One call is enough to access multiple attributes.
 * **Integration with Existing Classes**: Works seamlessly with regular classes, `dataclass`, and even `Enum` types.
 * **Swizzled Setters (New!)**: Optionally enable attribute assignment with swizzling syntax (e.g., `vec.xyz = 1,2,3`).
 
@@ -155,21 +154,6 @@ print(v.x_y_z_w)  # Output: Vector(x=1, y=2, z=3, w=4)
 ```
 
 This helps visually separate attribute names, making swizzled expressions more readable and less error-prone in complex cases.
-
-## Understanding Swizzling
-
-Swizzling allows:
-
-* **Rearrangement**: Access attributes in any order (e.g., `v.yzx`).
-* **Duplication**: Access the same attribute multiple times (e.g., `v.xxy`).
-* **Dynamic Composition**: Create new instances with desired attribute arrangements.
-* **Swizzled Setters**: Assign multiple attributes simultaneously in any order (e.g., `v.xyz = 1,2,3`).
-
-## Benefits
-
-* **Efficient Attribute Management**: Simplify complex attribute combinations.
-* **Dynamic Access Patterns**: No need for predefined attribute combinations.
-* **Cleaner Codebase**: Reduce redundancy and improve maintainability.
 
 ## License
 
