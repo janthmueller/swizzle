@@ -481,7 +481,7 @@ def swizzle_attributes_retriever(
                 )
             if len(arranged_names) != len(value):
                 raise ValueError(
-                    "too many values to unpack (expected {len(arranged_names)})"
+                    f"Expected {len(arranged_names)} values for swizzle attribute assignment, got {len(value)}"
                 )
             kv = {}
             for k, v in zip(arranged_names, value):
