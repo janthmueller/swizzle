@@ -4,23 +4,17 @@
 [![Pepy Total Downloads](https://img.shields.io/pepy/dt/swizzle)](https://pepy.tech/project/swizzle)
 [![GitHub License](https://img.shields.io/github/license/janthmueller/swizzle)](https://github.com/janthmueller/swizzle/blob/main/LICENSE)
 
-## Introduction
+## Overview
 
-**Swizzle** is a Python package that enhances attribute access, allowing for flexible retrieval of multiple attributes based on specified arrangements of their names.
+**Swizzle** is a Python utility for flexible attribute manipulation. You can retrieve and assign multiple attributes of an object in any order or combination using simple attribute syntax.
 
-Managing object attributes efficiently can sometimes become cumbersome, especially when you need to access multiple attributes in various combinations. Swizzle simplifies this process by extending Python's attribute access mechanisms, enabling you to access attributes in any order or combination without explicitly referencing the instance every time. 
+It works with regular classes, `dataclass`, `Enum`, and other objects. The goal is to make working with objects that have multiple fields more flexible and expressive.
 
-## Features
-
-* **Dynamic Attribute Access**: Retrieve multiple attributes in any specified arrangement.
-* **Integration with Existing Classes**: Works seamlessly with regular classes, `dataclass`, and even `Enum` types.
-* **Swizzled Setters (New!)**: Optionally enable attribute assignment with swizzling syntax (e.g., `vec.xyz = 1,2,3`).
+---
 
 ## Installation
 
 ### From PyPI
-
-Install Swizzle via pip:
 
 ```bash
 pip install swizzle
@@ -28,17 +22,15 @@ pip install swizzle
 
 ### From GitHub
 
-Install the latest version directly from GitHub:
-
 ```bash
 pip install git+https://github.com/janthmueller/swizzle.git
 ```
 
-## Getting Started
+---
 
-### Basic Usage with the `@swizzle` Decorator
+## Basic Usage
 
-Apply the `@swizzle` decorator to your class:
+### Using the `@swizzle` Decorator
 
 ```python
 import swizzle
@@ -51,18 +43,14 @@ class Vector:
         self.z = z
 
 v = Vector(1, 2, 3)
-
-# Access attributes in different orders
 print(v.yzx)  # Output: Vector(y=2, z=3, x=1)
 ```
 
-### Using Swizzle with `dataclass`
-
-Swizzle integrates smoothly with Python's `dataclass`:
+### With `dataclass`
 
 ```python
-import swizzle
 from dataclasses import dataclass
+import swizzle
 
 @swizzle
 @dataclass
@@ -72,17 +60,14 @@ class Point:
     z: int
 
 p = Point(1, 2, 3)
-
 print(p.zxy)  # Output: Point(z=3, x=1, y=2)
 ```
 
-### Swizzling Enums with `meta=True`
-
-Enable attribute swizzling directly on the class by setting `meta=True`:
+### Swizzling Enums
 
 ```python
-import swizzle
 from enum import IntEnum
+import swizzle
 
 @swizzle(meta=True)
 class Axis(IntEnum):
@@ -93,13 +78,13 @@ class Axis(IntEnum):
 print(Axis.YXZ)  # Output: Axis(Y=<Axis.Y: 2>, X=<Axis.X: 1>, Z=<Axis.Z: 3>)
 ```
 
-### Swizzled Setters (New!)
+---
 
-Starting with the latest version, Swizzle supports setting multiple attributes at once using swizzled assignment syntax:
+## Swizzled Setters
+
+Enable assignment using swizzle syntax:
 
 ```python
-import swizzle
-
 @swizzle(setter=True)
 class Vector:
     def __init__(self, x, y, z):
@@ -108,58 +93,72 @@ class Vector:
         self.z = z
 
 v = Vector(1, 2, 3)
-
-# Set multiple attributes in swizzled order
 v.zyx = 9, 8, 7
-
-# Access the attributes with swizzle syntax
 print(v.zyx)  # Output: Vector(z=9, y=8, x=7)
 ```
 
-## Advanced Usage
+---
 
-### Swizzled Named Tuples with `swizzledtuple`
+## Swizzled Named Tuples
 
-Create swizzled named tuples inspired by `namedtuple`:
+Inspired by `namedtuple`, `swizzledtuple` allows flexible attribute access:
 
 ```python
 from swizzle import swizzledtuple
 
-Vector = swizzledtuple('Vector', 'x y z') # Equivalent to swizzle.t('Vector', 'x y z')
-
+Vector = swizzledtuple('Vector', 'x y z')
 v = Vector(1, 2, 3)
 
 print(v.yzx)        # Output: Vector(y=2, z=3, x=1)
 print(v.yzx.xxzyzz) # Output: Vector(x=1, x=1, z=3, y=2, z=3, z=3)
 ```
 
-### Custom Separators for Clearer Access
+---
 
-You can customize the separator used between attribute names in swizzle expressions to make them more readable—especially when combining many fields. Use the `sep` argument in the `@swizzle` decorator:
+## Custom Separators
+
+For objects with multiple fields, combining attribute names without a separator can become hard to read. You can define a separator to make expressions clearer:
 
 ```python
 import swizzle
 
 @swizzle(sep='_')
-class Vector:
-    def __init__(self, x, y, z, w):
-        self.x = x
-        self.y = y
-        self.z = z
-        self.w = w
+class Person:
+    def __init__(self, name, age, city, country):
+        self.name = name
+        self.age = age
+        self.city = city
+        self.country = country
 
-v = Vector(1, 2, 3, 4)
+p = Person("Jane", 30, "Berlin", "Germany")
 
-print(v.x_y_z_w)  # Output: Vector(x=1, y=2, z=3, w=4)
+# Access multiple attributes clearly using underscores
+print(p.name_age_city_country)  
+# Output: Person(name='Jane', age=30, city='Berlin', country='Germany')
 ```
 
-This helps visually separate attribute names, making swizzled expressions more readable and less error-prone in complex cases.
+Without a separator, `p.nameagecitycountry` is harder to read. Using `sep='_'` keeps your attribute combinations clear and expressive.
+
+---
+
+## Documentation and Advanced Usage
+
+For more advanced features, custom settings, and examples, see the full documentation: [Swizzle Docs](https://janthmueller.github.io/swizzle/swizzle.html)
+
+---
+
+## Feedback and Use Cases
+
+Swizzle was built to explore flexible attribute manipulation in Python. Feedback and suggestions are welcome. I would love to hear:
+
+* Interesting use cases you discover
+* Ideas for improvements or additional features
+
+Feel free to open an issue or PR if you try it out.
+
+---
 
 ## License
 
-This project is licensed under the terms of the MIT license. See the [LICENSE](https://github.com/janthmueller/swizzle/blob/main/LICENSE) file for details.
-
-## Contributions
-
-Contributions are welcome! Feel free to submit a Pull Request or open an Issue on GitHub.
+MIT License. See [LICENSE](https://github.com/janthmueller/swizzle/blob/main/LICENSE)
 
