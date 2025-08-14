@@ -46,6 +46,59 @@ v = Vector(1, 2, 3)
 print(v.yzx)  # Output: Vector(y=2, z=3, x=1)
 ```
 
+### Swizzled Setters
+
+```python
+@swizzle(setter=True)
+class Vector:
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
+v = Vector(1, 2, 3)
+v.zyx = 9, 8, 7
+print(v.zyx)  # Output: Vector(z=9, y=8, x=7)
+```
+
+### Custom Separators
+
+For objects with multiple fields, combining attribute names without a separator can become hard to read. You can define a separator to make expressions clearer:
+
+```python
+import swizzle
+
+@swizzle(sep='_')
+class Person:
+    def __init__(self, name, age, city, country):
+        self.name = name
+        self.age = age
+        self.city = city
+        self.country = country
+
+p = Person("Jane", 30, "Berlin", "Germany")
+
+# Access multiple attributes clearly using underscores
+print(p.name_age_city_country)  
+# Output: Person(name='Jane', age=30, city='Berlin', country='Germany')
+```
+
+Without a separator, `p.nameagecitycountry` is harder to read. Using `sep='_'` keeps your attribute combinations clear and expressive.
+
+### Swizzled Named Tuples
+
+Inspired by `namedtuple`, `swizzledtuple` is the default output type for swizzled attributes.
+
+```python
+from swizzle import swizzledtuple
+
+Vector = swizzledtuple('Vector', 'x y z')
+v = Vector(1, 2, 3)
+
+print(v.yzx)        # Output: Vector(y=2, z=3, x=1)
+print(v.yzx.xxzyzz) # Output: Vector(x=1, x=1, z=3, y=2, z=3, z=3)
+```
+
 ### Using Swizzle with `dataclass`
 
 ```python
@@ -78,60 +131,6 @@ class Axis(IntEnum):
 print(Axis.YXZ)  # Output: Axis(Y=<Axis.Y: 2>, X=<Axis.X: 1>, Z=<Axis.Z: 3>)
 ```
 
-
-### Swizzled Setters
-
-```python
-@swizzle(setter=True)
-class Vector:
-    def __init__(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
-
-v = Vector(1, 2, 3)
-v.zyx = 9, 8, 7
-print(v.zyx)  # Output: Vector(z=9, y=8, x=7)
-```
-
-### Swizzled Named Tuples
-
-Inspired by `namedtuple`, `swizzledtuple` is the default output type for swizzled attributes.
-
-```python
-from swizzle import swizzledtuple
-
-Vector = swizzledtuple('Vector', 'x y z')
-v = Vector(1, 2, 3)
-
-print(v.yzx)        # Output: Vector(y=2, z=3, x=1)
-print(v.yzx.xxzyzz) # Output: Vector(x=1, x=1, z=3, y=2, z=3, z=3)
-```
-
-### Custom Separators
-
-For objects with multiple fields, combining attribute names without a separator can become hard to read. You can define a separator to make expressions clearer:
-
-```python
-import swizzle
-
-@swizzle(sep='_')
-class Person:
-    def __init__(self, name, age, city, country):
-        self.name = name
-        self.age = age
-        self.city = city
-        self.country = country
-
-p = Person("Jane", 30, "Berlin", "Germany")
-
-# Access multiple attributes clearly using underscores
-print(p.name_age_city_country)  
-# Output: Person(name='Jane', age=30, city='Berlin', country='Germany')
-```
-
-Without a separator, `p.nameagecitycountry` is harder to read. Using `sep='_'` keeps your attribute combinations clear and expressive.
-
 ---
 
 ## Documentation and Advanced Usage
@@ -154,4 +153,3 @@ Feel free to open an issue or PR if you try it out.
 ## License
 
 MIT License. See [LICENSE](https://github.com/janthmueller/swizzle/blob/main/LICENSE)
-
