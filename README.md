@@ -28,9 +28,9 @@ pip install git+https://github.com/janthmueller/swizzle.git
 
 ---
 
-## Basic Usage
+## Getting Started
 
-### Using the `@swizzle` Decorator
+### Basic Usage with the `@swizzle` Decorator
 
 ```python
 import swizzle
@@ -46,7 +46,7 @@ v = Vector(1, 2, 3)
 print(v.yzx)  # Output: Vector(y=2, z=3, x=1)
 ```
 
-### With `dataclass`
+### Using Swizzle with `dataclass`
 
 ```python
 from dataclasses import dataclass
@@ -63,7 +63,7 @@ p = Point(1, 2, 3)
 print(p.zxy)  # Output: Point(z=3, x=1, y=2)
 ```
 
-### Swizzling Enums
+### Swizzling Enums with `meta=True`
 
 ```python
 from enum import IntEnum
@@ -78,11 +78,8 @@ class Axis(IntEnum):
 print(Axis.YXZ)  # Output: Axis(Y=<Axis.Y: 2>, X=<Axis.X: 1>, Z=<Axis.Z: 3>)
 ```
 
----
 
-## Swizzled Setters
-
-Enable assignment using swizzle syntax:
+### Swizzled Setters
 
 ```python
 @swizzle(setter=True)
@@ -97,11 +94,9 @@ v.zyx = 9, 8, 7
 print(v.zyx)  # Output: Vector(z=9, y=8, x=7)
 ```
 
----
+### Swizzled Named Tuples
 
-## Swizzled Named Tuples
-
-Inspired by `namedtuple`, `swizzledtuple` allows flexible attribute access:
+Inspired by `namedtuple`, `swizzledtuple` is the default output type for swizzled attributes.
 
 ```python
 from swizzle import swizzledtuple
@@ -113,9 +108,7 @@ print(v.yzx)        # Output: Vector(y=2, z=3, x=1)
 print(v.yzx.xxzyzz) # Output: Vector(x=1, x=1, z=3, y=2, z=3, z=3)
 ```
 
----
-
-## Custom Separators
+### Custom Separators
 
 For objects with multiple fields, combining attribute names without a separator can become hard to read. You can define a separator to make expressions clearer:
 
