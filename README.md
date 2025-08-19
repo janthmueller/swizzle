@@ -6,9 +6,9 @@
 
 ## Overview
 
-**Swizzle** is a Python utility for flexible attribute manipulation. You can retrieve and assign multiple attributes of an object in any order or combination using simple attribute syntax.
+Swizzle makes it easy to get or set multiple attributes of an object at once, using simple attribute syntax. It works with regular classes, `dataclass`, `Enum`, and more.
 
-It works with regular classes, `dataclass`, `Enum`, and other objects. The goal is to make working with objects that have multiple fields more flexible and expressive.
+It provides convenient multi-attribute access. You can grab, combine, or assign attributes in any order or combination.
 
 ---
 
@@ -61,6 +61,8 @@ v.zyx = 9, 8, 7
 print(v.zyx)  # Output: Vector(z=9, y=8, x=7)
 ```
 
+**Tip:** Using `__slots__` can be a good practice when `setter=True`, as it helps prevent accidentally creating new attributes if names are mistyped.
+
 ### Custom Separators
 
 For objects with multiple fields, combining attribute names without a separator can become hard to read. You can define a separator to make expressions clearer:
@@ -99,6 +101,8 @@ print(v.yzx)        # Output: Vector(y=2, z=3, x=1)
 print(v.yzx.xxzyzz) # Output: Vector(x=1, x=1, z=3, y=2, z=3, z=3)
 ```
 
+You can also change the type of the returned object by passing the `type` argument to the `@swizzle` decorator. You could return a plain `tuple` or `list` if you prefer.
+
 ### Using Swizzle with `dataclass`
 
 ```python
@@ -130,6 +134,8 @@ class Axis(IntEnum):
 
 print(Axis.YXZ)  # Output: Axis(Y=<Axis.Y: 2>, X=<Axis.X: 1>, Z=<Axis.Z: 3>)
 ```
+
+Setting `meta=True` enables swizzling on class attributes.
 
 ---
 
