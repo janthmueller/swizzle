@@ -10,3 +10,4 @@ dist
 .benchmarks/
 benchmarks
 docs
+.venv
